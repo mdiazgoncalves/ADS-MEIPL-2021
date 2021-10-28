@@ -37,6 +37,7 @@ buildNumber.properties
 .mvn/wrapper/maven-wrapper.jar
 
 # VS Code config
+.vscode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
