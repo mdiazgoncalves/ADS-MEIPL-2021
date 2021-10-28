@@ -36,7 +36,7 @@ buildNumber.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
 
-# VS Code config
+# Visual Studio Code
 .vscode
 .vscode/*
 !.vscode/settings.json
