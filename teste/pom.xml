@@ -3,7 +3,7 @@
   <groupId>pt.iul.ista.ads</groupId>
   <artifactId>ADS-MEI-PL-2021</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Knowledge management system</name>
+  <name>Content/Knowledge management system</name>
   <description>Trabalho da UC de Arquitetura e deszenho de software</description>
   
 	<properties>
