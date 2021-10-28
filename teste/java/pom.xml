@@ -1,19 +1,29 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>pt.iul.ista.ads</groupId>
-  <artifactId>ADS-MEI-PL-2021</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <name>Content/Knowledge management system</name>
-  <description>Trabalho da UC de Arquitetura e deszenho de software</description>
-  
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>pt.iul.ista.ads</groupId>
+	<artifactId>ADS-MEI-PL-2021</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>Content/Knowledge management system</name>
+	<description>Trabalho da UC de Arquitetura e deszenho de software</description>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<junit.jupiter.version>5.5.2</junit.jupiter.version>
 	</properties>
-
+	<repositories>
+		<repository>
+			<id>my-alternate-repository</id>
+			<url>http://www.mvnrepository.com</url>
+		</repository>
+	</repositories>
 	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.5</version>
+		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
@@ -33,9 +43,39 @@
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-distribution</artifactId>
+			<version>5.1.19</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-api</artifactId>
+			<version>5.1.19</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-util</artifactId>
+			<version>3.3</version>
+		</dependency>
+		<!-- <dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-tools</artifactId>
+			<version>5.1.19</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-parsers</artifactId>
+			<version>5.1.19</version>
+		</dependency> -->
+		<!-- <dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
 			<artifactId>owlapi-compatibility</artifactId>
 			<version>5.1.19</version>
-		  </dependency>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>owlapi-contract</artifactId>
+			<version>5.1.19</version>
+		</dependency> -->
 	</dependencies>
 
 	<build>
