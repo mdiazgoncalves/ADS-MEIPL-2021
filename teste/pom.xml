@@ -1,0 +1,8 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>pt.iul.ista.ads</groupId>
+  <artifactId>ADS-MEI-PL-2021</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>Knowledge management system</name>
+  <description>Trabalho da UC de Arquitetura e deszenho de software</description>
+</project>
