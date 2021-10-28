@@ -22,6 +22,8 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
+
+# Maven config
 target/
 pom.xml.tag
 pom.xml.releaseBackup
@@ -34,6 +36,7 @@ buildNumber.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
 
+# VSCode config
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
