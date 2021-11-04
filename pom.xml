@@ -8,6 +8,6 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
-        <module>ckms</module>
+        <module>backend</module>
     </modules>
 </project>
