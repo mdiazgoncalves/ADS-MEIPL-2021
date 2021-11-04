@@ -1,0 +1,1 @@
+web: java -cp target/classes:target/dependency/* pt.iul.ista.ads.heroku.Main
