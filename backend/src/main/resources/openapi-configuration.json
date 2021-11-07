@@ -1,0 +1,18 @@
+{
+    "resourcePackages": [
+        "pt.iul.ista.ads.services"
+    ],
+    "prettyPrint" : true,
+    "cacheTTL": 0,
+    "openAPI": {
+        "info": {
+            "version": "1.0",
+            "title": "Base de Conhecimento",
+            "description": "Serviços para manipular/consultar base de conhecimento"
+        },
+        "externalDocs": {
+            "description": "Repositório do github",
+            "url": "https://github.com/mdiazgoncalves/ADS-MEIPL-2021"
+        }
+    }
+}
