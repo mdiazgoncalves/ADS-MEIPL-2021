@@ -2,11 +2,11 @@ package pt.iul.ista.ads.models;
 
 import java.util.List;
 
-public class ClassesModel {
+public class ClassesResponseModel {
 
 	private String name;
 	
-	private List<ClassesModel> subclasses;
+	private List<ClassesResponseModel> subclasses;
 
 	public String getName() {
 		return name;
@@ -16,11 +16,11 @@ public class ClassesModel {
 		this.name = name;
 	}
 	
-	public List<ClassesModel> getSubclasses() {
+	public List<ClassesResponseModel> getSubclasses() {
 		return subclasses;
 	}
 
-	public void setSubclasses(List<ClassesModel> subclasses) {
+	public void setSubclasses(List<ClassesResponseModel> subclasses) {
 		this.subclasses = subclasses;
 	}
 	
