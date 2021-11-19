@@ -1,4 +1,4 @@
-package backend;
+package pt.iul.ista.ads.test;
 
 import static org.junit.Assert.*;
 
