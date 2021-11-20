@@ -85,8 +85,7 @@ public class GithubOperations {
 	}
 	
 	private static void lockBranch(String branch) {
-		if(!locks.containsKey(branch))
-			locks.put(branch, new ReentrantLock());
+		locks.putIfAbsent(branch, new ReentrantLock());
 		locks.get(branch).lock();
 	}
 	
