@@ -1,5 +1,6 @@
 package pt.iul.ista.ads.services;
 
+import java.io.IOException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,10 +22,18 @@ import io.swagger.v3.oas.annotations.servers.Server;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
-
+import pt.iul.ista.ads.authorization.Authorization;
+import pt.iul.ista.ads.authorization.UnauthorizedException;
+import pt.iul.ista.ads.github.BranchAlreadyExistsException;
+import pt.iul.ista.ads.github.GithubOperations;
+import pt.iul.ista.ads.github.InvalidBranchException;
+import pt.iul.ista.ads.github.OldCommitException;
 import pt.iul.ista.ads.models.*;
+import pt.iul.ista.ads.owl.OntologyException;
+import pt.iul.ista.ads.utils.Utils;
 
-@Server(url = "https://knowledge-base-ads-test2.herokuapp.com")
+//@Server(url = "https://knowledge-base-ads-test2.herokuapp.com")
+@Server(url = "http://localhost:8080")
 @Path("/")
 public class Services {
 	
@@ -44,14 +53,28 @@ public class Services {
 				description = "OK",
 				content = @Content(schema = @Schema(implementation = String.class))),
 				@ApiResponse(responseCode = "400",
-				description = "Email não informado",
+				description = "Email não informado ou é inválido",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "401",
 				description = "Email já registado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response loginEditor(@Parameter(description = "Email do editor", required = true) @QueryParam("email") String email) {
-		return Response.status(501).build();
+	public Response loginEditor(@Parameter(description = "Email do editor", required = true) @QueryParam("email") String email) throws InvalidBranchException, IOException {
+		if(!Utils.validateEmail(email)) {
+			ErrorResponseModel res = new ErrorResponseModel("invalid email");
+			return Response.status(400).entity(res).build();
+		}
+
+		String branch = email.toLowerCase();
+		try {
+			GithubOperations.createBranch(branch);
+		} catch(BranchAlreadyExistsException e) {
+			// vamos ignorar o facto de que o branch já existe e vamos autorizar o editor na mesma
+			// isto dá jeito para testes iniciais
+			// no futuro vamos querer rejeitar o pedido
+		}
+		
+		return Response.ok(Authorization.generateEditorToken(branch)).build();
 	}
 	
 	@Path("/login/curator")
@@ -165,8 +188,13 @@ public class Services {
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className,
-			@Parameter(description = "Detalhes da nova classe", required = true) ClassCreateRequestModel body) {
-		return Response.status(501).build();
+			@Parameter(description = "Detalhes da nova classe", required = true) ClassCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, UnauthorizedException {
+		Authorization.checkValidEditor(branch, token);
+		
+		GithubOperations.editOntology(branch, commit, (ontology) -> {
+			ontology.addClass(className, body.getSuperClassName());
+		});
+		return Response.ok().build();
 	}
 
 	@Path("/class/{class}")

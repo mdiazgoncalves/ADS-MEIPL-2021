@@ -4,6 +4,14 @@ public class LatestCommitResponseModel {
 	
 	private String branch;
 	private String latestCommit;
+	
+	public LatestCommitResponseModel() {}
+	
+	public LatestCommitResponseModel(String latestCommit, String branch) {
+		this.branch = branch;
+		this.latestCommit = latestCommit;
+	}
+	
 	public String getBranch() {
 		return branch;
 	}

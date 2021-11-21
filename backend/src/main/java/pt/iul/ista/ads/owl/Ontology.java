@@ -2,6 +2,7 @@ package pt.iul.ista.ads.owl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
@@ -23,10 +24,12 @@ public class Ontology {
 	private IRI documentIRI;
 	private PrefixManager prefixManager;
 	
+	private static final Charset charset = StandardCharsets.UTF_8;
+	
 	public Ontology(String owl) throws OntologyException {
 		try {
 			manager = OWLManager.createOWLOntologyManager();
-			ontology = manager.loadOntologyFromOntologyDocument(new ByteArrayInputStream(owl.getBytes()));
+			ontology = manager.loadOntologyFromOntologyDocument(new ByteArrayInputStream(owl.getBytes(charset)));
 			factory = manager.getOWLDataFactory();
 			documentIRI = ontology.getOntologyID().getOntologyIRI().get();
 			prefixManager = new DefaultPrefixManager(documentIRI.toString());
@@ -40,7 +43,7 @@ public class Ontology {
 		try {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			manager.saveOntology(ontology, baos);
-			return baos.toString(StandardCharsets.UTF_8);
+			return baos.toString(charset);
 		} catch(OWLOntologyStorageException e) {
 			e.printStackTrace();
 			return "Error in OWL generation";

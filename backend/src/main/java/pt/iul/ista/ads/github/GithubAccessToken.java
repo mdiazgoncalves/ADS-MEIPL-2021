@@ -1,8 +1,6 @@
 package pt.iul.ista.ads.github;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpClient.Redirect;
@@ -21,6 +19,7 @@ import com.google.gson.JsonParser;
 import io.fusionauth.jwt.Signer;
 import io.fusionauth.jwt.domain.JWT;
 import io.fusionauth.jwt.rsa.RSASigner;
+import pt.iul.ista.ads.utils.Utils;
 
 // TODO cache e refresh automático do access token
 public class GithubAccessToken {
@@ -71,24 +70,13 @@ public class GithubAccessToken {
 	}
 	
 	private static String generateJWT() throws IOException {
-		Signer signer = RSASigner.newSHA256Signer(keyFileContent());
+		String keyFileContent = Utils.resourceToString(keyFilename);
+		Signer signer = RSASigner.newSHA256Signer(keyFileContent);
 		JWT jwt = new JWT()
 				.setIssuer(appId)
                 .setIssuedAt(ZonedDateTime.now(ZoneOffset.UTC))
                 .setExpiration(ZonedDateTime.now(ZoneOffset.UTC).plusMinutes(maxJWTDurationMinutes));
 		return JWT.getEncoder().encode(jwt, signer);
-	}
-	
-	private static String keyFileContent() throws IOException {
-		InputStreamReader isr = new InputStreamReader(GithubAccessToken.class.getClassLoader().getResourceAsStream(keyFilename));
-		BufferedReader br = new BufferedReader(isr);
-		StringBuilder sb = new StringBuilder();
-		String line;
-		while((line = br.readLine()) != null) {
-			sb.append(line);
-		}
-		br.close();
-		return sb.toString();
 	}
 	
 }
