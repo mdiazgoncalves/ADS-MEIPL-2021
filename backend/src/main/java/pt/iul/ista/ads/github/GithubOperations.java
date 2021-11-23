@@ -52,8 +52,7 @@ public class GithubOperations {
 			GitHub github = new GitHubBuilder().withAppInstallationToken(token).build();
 			repository = github.getRepository("ads-meipl/knowledge-base");
 		} catch(IOException e) {
-			e.printStackTrace();
-			logger.error("Erro na inicialização de GithubOperations");
+			throw new RuntimeException(e);
 		}
 	}
 	
@@ -161,5 +160,9 @@ public class GithubOperations {
 			unlockBranch(branch);
 		}
 		
+	}
+
+	public static String getDefaultBranch() {
+		return repository.getDefaultBranch();
 	}
 }

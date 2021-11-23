@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import pt.iul.ista.ads.authorization.Authorization;
+import pt.iul.ista.ads.authorization.Authorization.OperationType;
 import pt.iul.ista.ads.authorization.UnauthorizedException;
 import pt.iul.ista.ads.github.BranchAlreadyExistsException;
 import pt.iul.ista.ads.github.GithubOperations;
@@ -172,7 +173,8 @@ public class Services {
 		summary = "Criar classe",
 		description = "Cria nova classe, dado um nome e (opcionalmente) uma superclasse",
 		responses = {@ApiResponse(responseCode = "200",
-				description = "OK"),
+				description = "OK",
+				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -189,12 +191,12 @@ public class Services {
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className,
 			@Parameter(description = "Detalhes da nova classe", required = true) ClassCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, UnauthorizedException {
-		Authorization.checkValidEditor(branch, token);
+		Authorization.checkValidToken(branch, token, OperationType.EDIT);
 		
-		GithubOperations.editOntology(branch, commit, (ontology) -> {
+		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
 			ontology.addClass(className, body.getSuperClassName());
 		});
-		return Response.ok().build();
+		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
 	}
 
 	@Path("/class/{class}")
