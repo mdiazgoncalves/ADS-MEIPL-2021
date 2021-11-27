@@ -2,26 +2,22 @@ package pt.iul.ista.ads.models;
 
 import java.util.List;
 
-public class ClassesResponseModel {
+public class ClassesResponseModel extends GetOperationBaseResponseModel<List<ClassesResponseModel.ClassModel>> {
 
-	private String name;
-	
-	private List<ClassesResponseModel> subclasses;
-
-	public String getName() {
-		return name;
+	public static class ClassModel {
+		private String className;
+		private List<ClassModel> subclasses;
+		public String getClassName() {
+			return className;
+		}
+		public void setClassName(String className) {
+			this.className = className;
+		}
+		public List<ClassModel> getSubclasses() {
+			return subclasses;
+		}
+		public void setSubclasses(List<ClassModel> subclasses) {
+			this.subclasses = subclasses;
+		}
 	}
-	
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	public List<ClassesResponseModel> getSubclasses() {
-		return subclasses;
-	}
-
-	public void setSubclasses(List<ClassesResponseModel> subclasses) {
-		this.subclasses = subclasses;
-	}
-	
 }

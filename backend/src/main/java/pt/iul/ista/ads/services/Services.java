@@ -1,8 +1,6 @@
 package pt.iul.ista.ads.services;
 
 import java.io.IOException;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -111,7 +109,8 @@ public class Services {
 		description = "Retorna a árvore de classes existentes na base de conhecimento",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				content = @Content(array = @ArraySchema(schema = @Schema(implementation = ClassesResponseModel.class)))),
+				//content = @Content(array = @ArraySchema(schema = @Schema(implementation = ClassesResponseModel.class)))),
+				content = @Content(schema = @Schema(implementation = ClassesResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -125,17 +124,7 @@ public class Services {
 	public Response listClasses(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente") @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token) {
-		ClassesResponseModel bebida = new ClassesResponseModel();
-		bebida.setName("Bebida");
-		ClassesResponseModel vinho = new ClassesResponseModel();
-		vinho.setName("Vinho");
-		bebida.setSubclasses(Stream.of(vinho).collect(Collectors.toList()));
-		return Response.ok(Stream.of(bebida).collect(Collectors.toList())).build();
-		
-//		LatestCommitResponseModel res = new LatestCommitResponseModel();
-//		res.setBranch("ze_manel@gmail.com");
-//		res.setLatestCommit("2343abcdef");
-//		return Response.status(409).entity(res).build();
+		return Response.status(501).build();
 	}
 
 	
@@ -183,6 +172,9 @@ public class Services {
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "400",
 				description = "Branch e/ou commit não informado ou nome de classe já existe na ontologia ou superclasse não existe",
+				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
+				@ApiResponse(responseCode = "404",
+				description = "Superclasse não existe",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	@Consumes("application/json")
@@ -205,7 +197,8 @@ public class Services {
 		summary = "Alterar classe",
 		description = "Altera o nome da classe e/ou a sua superclasse",
 		responses = {@ApiResponse(responseCode = "200",
-				description = "OK"),
+				description = "OK",
+				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -234,7 +227,8 @@ public class Services {
 		summary = "Apagar classe",
 		description = "Apaga a classe",
 		responses = {@ApiResponse(responseCode = "200",
-				description = "OK"),
+				description = "OK",
+				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -264,7 +258,7 @@ public class Services {
 		description = "Retorna uma lista das relações existentes",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class)))),
+				content = @Content(schema = @Schema(implementation = RelationshipsResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -288,7 +282,7 @@ public class Services {
 		description = "Retorna uma lista de pares de indivíduos que se relacionam através de uma dada relação",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				content = @Content(array = @ArraySchema(schema = @Schema(implementation = RelationshipDetailResponseModel.class)))),
+				content = @Content(schema = @Schema(implementation = RelationshipDetailResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -316,7 +310,8 @@ public class Services {
 		summary = "Criar relação",
 		description = "Cria nova relação, dado um par de classes que definem os tipos de indivíduos que podem participar na relação",
 		responses = {@ApiResponse(responseCode = "200",
-				description = "OK"),
+				description = "OK",
+				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -342,7 +337,8 @@ public class Services {
 		summary = "Alterar relação",
 		description = "Altera o nome da relação e/ou as classes que relaciona",
 		responses = {@ApiResponse(responseCode = "200",
-				description = "OK"),
+				description = "OK",
+				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -371,7 +367,8 @@ public class Services {
 		summary = "Apagar relação",
 		description = "Apaga a classe",
 		responses = {@ApiResponse(responseCode = "200",
-				description = "OK"),
+				description = "OK",
+				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -401,7 +398,7 @@ public class Services {
 		description = "Retorna uma lista dos indivíduos existentes",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class)))),
+				content = @Content(schema = @Schema(implementation = IndividualsResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -425,7 +422,7 @@ public class Services {
 		description = "Retorna a classe a que um indivíduo pertence, bem como uma lista de relações nas quais o indivíduo participa",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				content = @Content(array = @ArraySchema(schema = @Schema(implementation = IndividualDetailResponseModel.class)))),
+						content = @Content(schema = @Schema(implementation = IndividualDetailResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -452,7 +449,8 @@ public class Services {
 		summary = "Criar indivíduo",
 		description = "Cria nova novo indivíudo, dado a sua classe e lista de relações nas quais participa",
 		responses = {@ApiResponse(responseCode = "200",
-				description = "OK"),
+				description = "OK",
+				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -479,7 +477,8 @@ public class Services {
 		summary = "Alterar indivíduo",
 		description = "Alterar nome e/ou classe do indivíduo e/ou acrescentar/remover relações nas quais o indivíduo participa",
 		responses = {@ApiResponse(responseCode = "200",
-				description = "OK"),
+				description = "OK",
+				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -508,7 +507,8 @@ public class Services {
 		summary = "Apagar indivíduo",
 		description = "Apaga o indivíduo",
 		responses = {@ApiResponse(responseCode = "200",
-				description = "OK"),
+				description = "OK",
+				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
@@ -587,8 +587,7 @@ public class Services {
 		summary = "Aceita versão",
 		description = "Aceita uma versão da ontologia, ao fazer merge do branch passado por parâmetro com o master. Caso haja conflitos será necessário usar um outro serviço",
 		responses = {@ApiResponse(responseCode = "200",
-				description = "OK",
-				content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class)))),
+				description = "OK"),
 				@ApiResponse(responseCode = "409",
 				description = "Merge não efetuado devido a conflito ou o commit indicado no request não é o mais recente",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
@@ -611,8 +610,7 @@ public class Services {
 		summary = "Apaga versão",
 		description = "Rejeita uma versão da ontologia ao apagar o branch respetivo",
 		responses = {@ApiResponse(responseCode = "200",
-				description = "OK",
-				content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class)))),
+				description = "OK"),
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
