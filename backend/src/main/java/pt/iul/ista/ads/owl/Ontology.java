@@ -50,10 +50,12 @@ public class Ontology {
 		}
 	}
 
-	public void addClass(String className, String superclassName) {
+	public void addClass(String className, String superclassName) throws ClassNotFoundOntologyException {
 		OWLClass newClass = factory.getOWLClass(":#" + className, prefixManager);
 		manager.addAxiom(ontology, factory.getOWLDeclarationAxiom(newClass));
 		if(superclassName != null) {
+			if(!ontology.containsClassInSignature(IRI.create(documentIRI.toString() + "#" + superclassName)))
+				throw new ClassNotFoundOntologyException("Class " + superclassName + " does not exist in ontology");
 			OWLClass superclass = factory.getOWLClass(":#" + superclassName, prefixManager);
 			manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(newClass, superclass));
 		}
