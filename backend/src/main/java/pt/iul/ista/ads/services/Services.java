@@ -111,14 +111,14 @@ public class Services {
 		description = "Retorna a árvore de classes existentes na base de conhecimento",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				//content = @Content(array = @ArraySchema(schema = @Schema(implementation = ClassesResponseModel.class)))),
 				content = @Content(schema = @Schema(implementation = ClassesResponseModel.class))),
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response listClasses(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
-			@Parameter(description = "Token de autorização") @QueryParam("token") String token) throws IOException, OntologyException {
+			@Parameter(description = "Token de autorização") @QueryParam("token") String token) throws IOException, OntologyException, UnauthorizedException {
+		Authorization.checkValidToken(branch, token, OperationType.READ);
 		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
 		Ontology ontology = readOntologyResponse.getOntology();
 		ClassesResponseModel res = new ClassesResponseModel();
@@ -146,8 +146,15 @@ public class Services {
 	@Produces("application/json")
 	public Response detailClass(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
-			@Parameter(description = "Nome de classe") @PathParam("class") String className) {
-		return Response.status(501).build();
+			@Parameter(description = "Nome de classe") @PathParam("class") String className) throws IOException, OntologyException, UnauthorizedException {
+		Authorization.checkValidToken(branch, token, OperationType.READ);
+		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
+		Ontology ontology = readOntologyResponse.getOntology();
+		ClassDetailResponseModel res = new ClassDetailResponseModel();
+		res.setBranch(branch);
+		res.setLatestCommit(readOntologyResponse.getLatestCommit());
+		res.setData(ontology.classDetails(className));
+		return Response.ok(res).build();
 	}
 	
 	@Path("/class/{class}")
