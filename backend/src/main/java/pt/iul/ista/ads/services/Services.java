@@ -25,9 +25,11 @@ import pt.iul.ista.ads.authorization.Authorization.OperationType;
 import pt.iul.ista.ads.authorization.UnauthorizedException;
 import pt.iul.ista.ads.github.BranchAlreadyExistsException;
 import pt.iul.ista.ads.github.GithubOperations;
+import pt.iul.ista.ads.github.GithubOperations.ReadOntologyResponse;
 import pt.iul.ista.ads.github.InvalidBranchException;
 import pt.iul.ista.ads.github.OldCommitException;
 import pt.iul.ista.ads.models.*;
+import pt.iul.ista.ads.owl.Ontology;
 import pt.iul.ista.ads.owl.OntologyException;
 import pt.iul.ista.ads.utils.Utils;
 
@@ -111,20 +113,19 @@ public class Services {
 				description = "OK",
 				//content = @Content(array = @ArraySchema(schema = @Schema(implementation = ClassesResponseModel.class)))),
 				content = @Content(schema = @Schema(implementation = ClassesResponseModel.class))),
-				@ApiResponse(responseCode = "409",
-				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
-				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
-				@ApiResponse(responseCode = "400",
-				description = "Branch foi informado mas falta o commit",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response listClasses(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
-			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente") @QueryParam("commit") String commit,
-			@Parameter(description = "Token de autorização") @QueryParam("token") String token) {
-		return Response.status(501).build();
+			@Parameter(description = "Token de autorização") @QueryParam("token") String token) throws IOException, OntologyException {
+		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
+		Ontology ontology = readOntologyResponse.getOntology();
+		ClassesResponseModel res = new ClassesResponseModel();
+		res.setBranch(branch);
+		res.setLatestCommit(readOntologyResponse.getLatestCommit());
+		res.setData(ontology.listClasses());
+		return Response.ok(res).build();
 	}
 
 	
@@ -136,21 +137,14 @@ public class Services {
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
 				content = @Content(schema = @Schema(implementation = ClassDetailResponseModel.class))),
-				@ApiResponse(responseCode = "409",
-				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
-				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
-				@ApiResponse(responseCode = "400",
-				description = "Branch foi informado mas falta o commit",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Classe não existe",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response detailClass(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
-			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente") @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className) {
 		return Response.status(501).build();
@@ -259,18 +253,11 @@ public class Services {
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
 				content = @Content(schema = @Schema(implementation = RelationshipsResponseModel.class))),
-				@ApiResponse(responseCode = "409",
-				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
-				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
-				@ApiResponse(responseCode = "400",
-				description = "Branch foi informado mas falta o commit",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response listRelationships(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
-			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente") @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token) {
 		return Response.status(501).build();
 	}
@@ -283,21 +270,14 @@ public class Services {
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
 				content = @Content(schema = @Schema(implementation = RelationshipDetailResponseModel.class))),
-				@ApiResponse(responseCode = "409",
-				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
-				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
-				@ApiResponse(responseCode = "400",
-				description = "Branch foi informado mas falta o commit",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Relação não existe",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response detailRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
-			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente") @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String individualName) {
 		return Response.status(501).build();
@@ -399,18 +379,11 @@ public class Services {
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
 				content = @Content(schema = @Schema(implementation = IndividualsResponseModel.class))),
-				@ApiResponse(responseCode = "409",
-				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
-				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
-				@ApiResponse(responseCode = "400",
-				description = "Branch foi informado mas falta o commit",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response listIndividuals(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
-			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente") @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token) {
 		return Response.status(501).build();
 	}
@@ -423,21 +396,14 @@ public class Services {
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
 						content = @Content(schema = @Schema(implementation = IndividualDetailResponseModel.class))),
-				@ApiResponse(responseCode = "409",
-				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
-				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
-				@ApiResponse(responseCode = "400",
-				description = "Branch foi informado mas falta o commit",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Indivíduo não existe",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response detailIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
-			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente") @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName) {
 		return Response.status(501).build();

@@ -68,15 +68,9 @@ public class GithubOperations {
 			String latestCommit = getLatestCommit(branch);
 			if(!commit.equals(latestCommit))
 				throw new OldCommitException(latestCommit, branch);
-			
-			// get ontology from repo
-			GHTree tree = repository.getTree(branch);
-			GHBlob owlBlob = null;
-			for(GHTreeEntry entry : tree.getTree())
-				if(entry.getPath().equals(owlPath))
-					owlBlob = entry.asBlob();
-			String origOwl = new String(Base64.getMimeDecoder().decode(owlBlob.getContent()));
-			Ontology ontology = new Ontology(origOwl);
+
+			GetOWLResponse getOWLResponse = getOWL(branch);
+			Ontology ontology = new Ontology(getOWLResponse.owl);
 			
 			// invoke callback to modify ontology
 			callback.execute(ontology);
@@ -88,12 +82,64 @@ public class GithubOperations {
 				.path(owlPath)
 				.content(newOwl)
 				.message("User update through the application")
-				.sha(owlBlob.getSha())
+				.sha(getOWLResponse.sha)
 				.commit();
 			return res.getCommit().getSHA1();
 		} finally {
 			unlockBranch(branch);
 		}
+	}
+	
+	public static ReadOntologyResponse readOntology(String branch) throws IOException, OntologyException {
+		lockBranch(branch);
+		try {
+			String latestCommit = getLatestCommit(branch);
+			GetOWLResponse getOWLResponse = getOWL(branch);
+			Ontology ontology = new Ontology(getOWLResponse.owl);
+			ReadOntologyResponse res = new ReadOntologyResponse();
+			res.setLatestCommit(latestCommit);
+			res.setOntology(ontology);
+			return res;
+		} finally {
+			unlockBranch(branch);
+		}
+	}
+	
+	public static class ReadOntologyResponse {
+		private Ontology ontology;
+		private String latestCommit;
+		public Ontology getOntology() {
+			return ontology;
+		}
+		public void setOntology(Ontology ontology) {
+			this.ontology = ontology;
+		}
+		public String getLatestCommit() {
+			return latestCommit;
+		}
+		public void setLatestCommit(String latesetCommit) {
+			this.latestCommit = latesetCommit;
+		}
+	}
+	
+	private static GetOWLResponse getOWL(String branch) throws IOException {		
+		// get ontology from repo
+		GHTree tree = repository.getTree(branch);
+		GHBlob owlBlob = null;
+		for(GHTreeEntry entry : tree.getTree())
+			if(entry.getPath().equals(owlPath))
+				owlBlob = entry.asBlob();
+		String owl = new String(Base64.getMimeDecoder().decode(owlBlob.getContent()));
+
+		GetOWLResponse res = new GetOWLResponse();
+		res.sha = owlBlob.getSha();
+		res.owl = owl;
+		return res;
+	}
+	
+	private static class GetOWLResponse {
+		public String sha;
+		public String owl;
 	}
 	
 	private static void lockBranch(String branch) {
