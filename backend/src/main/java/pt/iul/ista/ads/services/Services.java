@@ -153,7 +153,7 @@ public class Services {
 		ClassDetailResponseModel res = new ClassDetailResponseModel();
 		res.setBranch(branch);
 		res.setLatestCommit(readOntologyResponse.getLatestCommit());
-		res.setData(ontology.classDetails(className));
+		res.setData(ontology.detailClass(className));
 		return Response.ok(res).build();
 	}
 	
@@ -218,8 +218,13 @@ public class Services {
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className,
-			@Parameter(description = "Alterações a fazer à classe", required = true) ClassAlterRequestModel body) {
-		return Response.status(501).build();
+			@Parameter(description = "Alterações a fazer à classe", required = true) ClassAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, UnauthorizedException {
+		Authorization.checkValidToken(branch, token, OperationType.EDIT);
+		
+		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+			ontology.alterClass(className, body.getNewClassName(), body.getNewSuperClass());
+		});
+		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
 	}
 	
 	@Path("/class/{class}")

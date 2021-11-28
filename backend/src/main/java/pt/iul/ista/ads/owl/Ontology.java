@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -23,6 +24,7 @@ import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.model.PrefixManager;
 import org.semanticweb.owlapi.search.EntitySearcher;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
+import org.semanticweb.owlapi.util.OWLEntityRenamer;
 
 import pt.iul.ista.ads.models.ClassDetailResponseModel;
 import pt.iul.ista.ads.models.ClassesResponseModel;
@@ -76,6 +78,11 @@ public class Ontology {
 			throw new ClassNotFoundOntologyException(className);
 	}
 	
+	private void checkClassNotExists(String className) throws ClassAlreadyExistsOntologyException {
+		if(ontology.containsClassInSignature(IRI.create(documentIRI.toString() + "#" + className)))
+			throw new ClassAlreadyExistsOntologyException(className);
+	}
+	
 	public List<ClassesResponseModel.ClassModel> listClasses() {
 		Set<OWLClass> classes = ontology.getClassesInSignature();
 		List<ClassesResponseModel.ClassModel> res = new ArrayList<ClassesResponseModel.ClassModel>();
@@ -101,7 +108,7 @@ public class Ontology {
 		return entity.toStringID().replace(documentIRI, "").replace("#", "");
 	}
 	
-	public ClassDetailResponseModel.ClassModel classDetails(String className) throws ClassNotFoundOntologyException {
+	public ClassDetailResponseModel.ClassModel detailClass(String className) throws ClassNotFoundOntologyException {
 		checkClassExists(className);
 		
 		ClassDetailResponseModel.ClassModel res = new ClassDetailResponseModel.ClassModel();
@@ -122,5 +129,33 @@ public class Ontology {
 		}
 		
 		return res;
+	}
+	
+	public void alterClass(String className, String newClassName, String newSuperclassName) throws ClassNotFoundOntologyException, ClassAlreadyExistsOntologyException {
+		// validar os parâmetros primeiro
+		checkClassExists(className);
+		if(newClassName != null) {
+			checkClassNotExists(newClassName);
+		}
+		if(newSuperclassName != null) {
+			checkClassExists(newSuperclassName);
+		}
+		
+		// parâmetros validados; efetuar alterações
+		OWLClass cls = factory.getOWLClass(":#" + className, prefixManager);
+		if(newClassName != null) {
+			OWLEntityRenamer renamer = new OWLEntityRenamer(manager, Collections.singleton(ontology));
+			OWLClass newCls = factory.getOWLClass(":#" + newClassName, prefixManager);
+			manager.applyChanges(renamer.changeIRI(cls.getIRI(), newCls.getIRI()));
+			cls = newCls; // alterar cls para que código abaixo se refira ao novo nome da classe
+		}
+		if(newSuperclassName != null) {
+			for(OWLSubClassOfAxiom axiom : ontology.getSubClassAxiomsForSubClass(cls))
+				ontology.removeAxiom(axiom);
+			
+			OWLClass superClass = factory.getOWLClass(":#" + newSuperclassName, prefixManager);
+			manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(cls, superClass));
+		}
+
 	}
 }
