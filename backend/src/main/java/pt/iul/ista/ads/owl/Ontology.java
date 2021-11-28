@@ -24,6 +24,7 @@ import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.model.PrefixManager;
 import org.semanticweb.owlapi.search.EntitySearcher;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
+import org.semanticweb.owlapi.util.OWLEntityRemover;
 import org.semanticweb.owlapi.util.OWLEntityRenamer;
 
 import pt.iul.ista.ads.models.ClassDetailResponseModel;
@@ -63,7 +64,8 @@ public class Ontology {
 		}
 	}
 
-	public void addClass(String className, String superclassName) throws ClassNotFoundOntologyException {
+	public void addClass(String className, String superclassName) throws ClassNotFoundOntologyException, ClassAlreadyExistsOntologyException {
+		checkClassNotExists(className);
 		OWLClass newClass = factory.getOWLClass(":#" + className, prefixManager);
 		manager.addAxiom(ontology, factory.getOWLDeclarationAxiom(newClass));
 		if(superclassName != null) {
@@ -157,5 +159,13 @@ public class Ontology {
 			manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(cls, superClass));
 		}
 
+	}
+	
+	public void deleteClass(String className) throws ClassNotFoundOntologyException {
+		checkClassExists(className);
+		OWLEntityRemover remover = new OWLEntityRemover(Collections.singleton(ontology));
+		OWLClass cls = factory.getOWLClass(":#" + className, prefixManager);
+		cls.accept(remover);
+		manager.applyChanges(remover.getChanges());
 	}
 }

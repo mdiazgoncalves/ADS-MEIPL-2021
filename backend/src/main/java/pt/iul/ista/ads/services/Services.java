@@ -251,8 +251,13 @@ public class Services {
 	public Response deleteClass(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome de classe") @PathParam("class") String className) {
-		return Response.status(501).build();
+			@Parameter(description = "Nome de classe") @PathParam("class") String className) throws UnauthorizedException, OldCommitException, IOException, OntologyException, InvalidBranchException {
+		Authorization.checkValidToken(branch, token, OperationType.EDIT);
+		
+		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+			ontology.deleteClass(className);
+		});
+		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
 	}
 
 	// Relações
