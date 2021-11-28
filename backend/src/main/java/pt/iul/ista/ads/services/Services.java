@@ -93,7 +93,7 @@ public class Services {
 				description = "Password inválida",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response loginCurator(@Parameter(description = "Password do curador") @QueryParam("password") String password) {
+	public Response loginCurator(@Parameter(description = "Password do curador", required = true) @QueryParam("password") String password) {
 		return Response.status(501).build();
 	}
 	
@@ -116,7 +116,7 @@ public class Services {
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response listClasses(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
+	public Response listClasses(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token) throws IOException, OntologyException, UnauthorizedException {
 		Authorization.checkValidToken(branch, token, OperationType.READ);
 		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
@@ -144,7 +144,7 @@ public class Services {
 				description = "Classe não existe",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response detailClass(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
+	public Response detailClass(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className) throws IOException, OntologyException, UnauthorizedException {
 		Authorization.checkValidToken(branch, token, OperationType.READ);
@@ -264,7 +264,7 @@ public class Services {
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response listRelationships(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
+	public Response listRelationships(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token) {
 		return Response.status(501).build();
 	}
@@ -284,7 +284,7 @@ public class Services {
 				description = "Relação não existe",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response detailRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
+	public Response detailRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String individualName) {
 		return Response.status(501).build();
@@ -390,7 +390,7 @@ public class Services {
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response listIndividuals(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
+	public Response listIndividuals(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token) {
 		return Response.status(501).build();
 	}
@@ -410,7 +410,7 @@ public class Services {
 				description = "Indivíduo não existe",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response detailIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
+	public Response detailIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName) {
 		return Response.status(501).build();
@@ -526,7 +526,7 @@ public class Services {
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	@Consumes("application/json")
-	public Response query(@Parameter(description = "Nome do branch sobre o qual incide a operação") @QueryParam("branch") String branch,
+	public Response query(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente") @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
 			@Parameter(description = "Query", required = true) String query) {
