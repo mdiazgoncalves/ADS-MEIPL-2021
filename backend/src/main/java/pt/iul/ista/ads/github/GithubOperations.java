@@ -152,7 +152,27 @@ public class GithubOperations {
 	}
 	
 	public static String getLatestCommit(String branch) throws IOException {
-		return repository.getCommit(branch).getSHA1();
+		// versão original deste método, usando a biblioteca java:
+		//return repository.getCommit(branch).getSHA1();
+		// por vezes não funciona como desejado, por isso vamos usar a api REST diretamente
+		try {
+			String authorizationHeader = "Bearer " + token;
+			
+			HttpClient client = HttpClient.newBuilder()
+					.followRedirects(Redirect.NORMAL)
+					.version(Version.HTTP_1_1)
+					.build();
+			
+			HttpRequest request = HttpRequest.newBuilder()
+					.uri(new URI("https://api.github.com/repos/ads-meipl/knowledge-base/commits/" + branch))
+					.setHeader("Authorization", authorizationHeader)
+					.build();
+			HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+			JsonObject responseObject = JsonParser.parseString(response.body()).getAsJsonObject();
+			return responseObject.get("sha").getAsString();
+		} catch(URISyntaxException | InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public static boolean isValidBranch(String branch) {
