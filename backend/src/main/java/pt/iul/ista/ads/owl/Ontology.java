@@ -68,7 +68,7 @@ public class Ontology {
 		checkClassNotExists(className);
 		OWLClass newClass = factory.getOWLClass(":#" + className, prefixManager);
 		manager.addAxiom(ontology, factory.getOWLDeclarationAxiom(newClass));
-		if(superclassName != null) {
+		if(superclassName != null && !superclassName.isEmpty()) {
 			checkClassExists(superclassName);
 			OWLClass superclass = factory.getOWLClass(":#" + superclassName, prefixManager);
 			manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(newClass, superclass));
@@ -155,8 +155,10 @@ public class Ontology {
 			for(OWLSubClassOfAxiom axiom : ontology.getSubClassAxiomsForSubClass(cls))
 				ontology.removeAxiom(axiom);
 			
-			OWLClass superClass = factory.getOWLClass(":#" + newSuperclassName, prefixManager);
-			manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(cls, superClass));
+			if(!newSuperclassName.isEmpty()) {
+				OWLClass superClass = factory.getOWLClass(":#" + newSuperclassName, prefixManager);
+				manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(cls, superClass));
+			}
 		}
 
 	}
