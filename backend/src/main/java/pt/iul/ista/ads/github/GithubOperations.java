@@ -16,13 +16,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.kohsuke.github.GHBlob;
 import org.kohsuke.github.GHContentUpdateResponse;
-import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHTree;
 import org.kohsuke.github.GHTreeEntry;
-import org.kohsuke.github.GitHub;
-import org.kohsuke.github.GitHubBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -30,31 +25,11 @@ import com.google.gson.JsonParser;
 import pt.iul.ista.ads.owl.Ontology;
 import pt.iul.ista.ads.owl.OntologyException;
 
-public class GithubOperations {
+public class GithubOperations extends GithubOperationsBase {
 
 	private static ConcurrentHashMap<String, ReentrantLock> locks = new ConcurrentHashMap<String, ReentrantLock>();
 	
-	private static GHRepository repository;
-	
 	private static final String owlPath = "knowledge-base.owl";
-	
-	private static Logger logger = LoggerFactory.getLogger(GithubOperations.class);
-	
-	private static String token;	// TODO remover isto, a cache do access token deve ser responsabilidade de GithubAccessToken
-	
-	static {
-		try {
-			token = GithubAccessToken.getGithubAccessToken();
-			System.out.println("Github token:");
-			System.out.println(token);
-//			token = "ghs_PhUY5JueK2maAdgocndGEZG1i3oKCG0odPlW";
-			// TODO será necessário voltar a fazer este procedimento quando o access token expirar
-			GitHub github = new GitHubBuilder().withAppInstallationToken(token).build();
-			repository = github.getRepository("ads-meipl/knowledge-base");
-		} catch(IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
 	
 	// retorna hash do commit efetuado
 	public static String editOntology(String branch, String commit, OntologyEditorCallback callback) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
@@ -77,7 +52,7 @@ public class GithubOperations {
 			
 			// push new ontology to repo
 			String newOwl = ontology.toString();
-			GHContentUpdateResponse res = repository.createContent()
+			GHContentUpdateResponse res = getGHRepository().createContent()
 				.branch(branch)
 				.path(owlPath)
 				.content(newOwl)
@@ -124,7 +99,7 @@ public class GithubOperations {
 	
 	private static GetOWLResponse getOWL(String branch) throws IOException {		
 		// get ontology from repo
-		GHTree tree = repository.getTree(branch);
+		GHTree tree = getGHRepository().getTree(branch);
 		GHBlob owlBlob = null;
 		for(GHTreeEntry entry : tree.getTree())
 			if(entry.getPath().equals(owlPath))
@@ -156,7 +131,7 @@ public class GithubOperations {
 		//return repository.getCommit(branch).getSHA1();
 		// por vezes não funciona como desejado, por isso vamos usar a api REST diretamente
 		try {
-			String authorizationHeader = "Bearer " + token;
+			String authorizationHeader = "Bearer " + getGithubAccessToken();
 			
 			HttpClient client = HttpClient.newBuilder()
 					.followRedirects(Redirect.NORMAL)
@@ -176,7 +151,7 @@ public class GithubOperations {
 	}
 	
 	public static boolean isValidBranch(String branch) {
-		return !branch.equals(repository.getDefaultBranch());
+		return !branch.equals(getGHRepository().getDefaultBranch());
 	}
 
 	public static void createBranch(String branch) throws InvalidBranchException, IOException, BranchAlreadyExistsException {
@@ -185,12 +160,12 @@ public class GithubOperations {
 
 		lockBranch(branch);
 		try {			
-			String latestCommitInMain = getLatestCommit(repository.getDefaultBranch());
+			String latestCommitInMain = getLatestCommit(getGHRepository().getDefaultBranch());
 
 			// não encontrei forma de criar branch com a biblioteca java
 			// portanto vamos usar aqui a API REST diretamente
 			
-			String authorizationHeader = "Bearer " + token;
+			String authorizationHeader = "Bearer " + getGithubAccessToken();
 			
 			HttpClient client = HttpClient.newBuilder()
 					.followRedirects(Redirect.NORMAL)
@@ -221,7 +196,7 @@ public class GithubOperations {
 				}
 			}
 		} catch(URISyntaxException | InterruptedException e) {
-				throw new RuntimeException(e);
+			throw new RuntimeException(e);
 		} finally {
 			unlockBranch(branch);
 		}
@@ -229,6 +204,6 @@ public class GithubOperations {
 	}
 
 	public static String getDefaultBranch() {
-		return repository.getDefaultBranch();
+		return getGHRepository().getDefaultBranch();
 	}
 }
