@@ -28,7 +28,7 @@ public class Main {
         
         ServletHolder apiServlet = context.addServlet(ServletContainer.class, "/*");
         apiServlet.setInitOrder(1);
-        apiServlet.setInitParameter("jersey.config.server.provider.packages", "pt.iul.ista.ads.services");
+        apiServlet.setInitParameter("jersey.config.server.provider.packages", "pt.iul.ista.ads.services,pt.iul.ista.ads.exceptionmappers");
         
         ServletHolder swaggerServlet = context.addServlet(OpenApiServlet.class, "/swagger");
         swaggerServlet.setInitOrder(2);
