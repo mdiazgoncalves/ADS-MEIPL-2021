@@ -85,9 +85,9 @@ public class Ontology {
 			throw new ClassAlreadyExistsOntologyException(className);
 	}
 	
-	public List<ClassesResponseModel.ClassModel> listClasses() {
+	public List<ClassesResponseModel.ClassTreeModel> listClasses() {
 		Set<OWLClass> classes = ontology.getClassesInSignature();
-		List<ClassesResponseModel.ClassModel> res = new ArrayList<ClassesResponseModel.ClassModel>();
+		List<ClassesResponseModel.ClassTreeModel> res = new ArrayList<ClassesResponseModel.ClassTreeModel>();
 		for(OWLClass cls : classes) {
 			Set<OWLSubClassOfAxiom> superclassAxioms = ontology.getSubClassAxiomsForSubClass(cls);
 			if(superclassAxioms.isEmpty())
@@ -96,10 +96,10 @@ public class Ontology {
 		return res;
 	}
 	
-	private ClassesResponseModel.ClassModel classModel(OWLClass cls) {
-		ClassesResponseModel.ClassModel res = new ClassesResponseModel.ClassModel();
+	private ClassesResponseModel.ClassTreeModel classModel(OWLClass cls) {
+		ClassesResponseModel.ClassTreeModel res = new ClassesResponseModel.ClassTreeModel();
 		res.setClassName(owlEntityToString(cls));
-		res.setSubclasses(new ArrayList<ClassesResponseModel.ClassModel>());
+		res.setSubclasses(new ArrayList<ClassesResponseModel.ClassTreeModel>());
 		for(OWLSubClassOfAxiom subclassAxiom : ontology.getSubClassAxiomsForSuperClass(cls)) {
 			res.getSubclasses().add(classModel(subclassAxiom.getSubClass().asOWLClass()));
 		}

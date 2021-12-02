@@ -196,7 +196,9 @@ public class Services {
 	@PUT
 	@Operation(tags = {"Operações CRUD"},
 		summary = "Alterar classe",
-		description = "Altera o nome da classe e/ou a sua superclasse",
+		description = "Altera o nome da classe e/ou a sua superclasse."
+				+ " Uma superclasse null indica que a superclasse se mantém a mesma."
+				+ " Uma string vazia indica que a classe deixa de ter superclasse (i.e. está no top level).",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
