@@ -277,11 +277,17 @@ public class Services {
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response listRelationships(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
-			@Parameter(description = "Token de autorização") @QueryParam("token") String token) {
-		return Response.status(501).build();
+			@Parameter(description = "Token de autorização") @QueryParam("token") String token) throws IOException, OntologyException {
+		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
+		Ontology ontology = readOntologyResponse.getOntology();
+		RelationshipsResponseModel res = new RelationshipsResponseModel();
+		res.setBranch(branch);
+		res.setLatestCommit(readOntologyResponse.getLatestCommit());
+		res.setData(ontology.listRelationships());
+		return Response.ok(res).build();
 	}
 	
-	@Path("/relationships/{relationship}")
+	@Path("/relationship/{relationship}")
 	@GET
 	@Operation(tags = {"Operações CRUD"},
 		summary = "Detalhes de relação",
@@ -298,8 +304,14 @@ public class Services {
 	@Produces("application/json")
 	public Response detailRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
-			@Parameter(description = "Nome de relação") @PathParam("relationship") String individualName) {
-		return Response.status(501).build();
+			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName) throws IOException, OntologyException {
+		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
+		Ontology ontology = readOntologyResponse.getOntology();
+		RelationshipDetailResponseModel res = new RelationshipDetailResponseModel();
+		res.setBranch(branch);
+		res.setLatestCommit(readOntologyResponse.getLatestCommit());
+		res.setData(ontology.detailRelationship(relationshipName));
+		return Response.ok(res).build();
 	}
 	
 	
@@ -326,8 +338,11 @@ public class Services {
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName,
-			@Parameter(description = "Detalhes da nova relação", required = true) RelationshipCreateRequestModel body) {
-		return Response.status(501).build();
+			@Parameter(description = "Detalhes da nova relação", required = true) RelationshipCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
+		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+			ontology.createRelationship(relationshipName, body.getClassName1(), body.getClassName2());
+		});
+		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
 	}
 
 	@Path("/relationship/{relationship}")
@@ -356,8 +371,11 @@ public class Services {
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName,
-			@Parameter(description = "Alterações a fazer à relação", required = true) RelationshipAlterRequestModel body) {
-		return Response.status(501).build();
+			@Parameter(description = "Alterações a fazer à relação", required = true) RelationshipAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
+		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+			ontology.alterRelationship(relationshipName, body.getNewRelationshipName(), body.getClassName1(), body.getClassName2());
+		});
+		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
 	}
 	
 	@Path("/relationship/{relationship}")
@@ -384,8 +402,11 @@ public class Services {
 	public Response deleteRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName) {
-		return Response.status(501).build();
+			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
+		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+			ontology.deleteRelationship(relationshipName);
+		});
+		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
 	}
 	
 	// Indivíduos
