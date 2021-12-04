@@ -424,8 +424,14 @@ public class Services {
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response listIndividuals(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
-			@Parameter(description = "Token de autorização") @QueryParam("token") String token) {
-		return Response.status(501).build();
+			@Parameter(description = "Token de autorização") @QueryParam("token") String token) throws IOException, OntologyException {
+		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
+		Ontology ontology = readOntologyResponse.getOntology();
+		IndividualsResponseModel res = new IndividualsResponseModel();
+		res.setBranch(branch);
+		res.setLatestCommit(readOntologyResponse.getLatestCommit());
+		res.setData(ontology.listIndividuals());
+		return Response.ok(res).build();
 	}
 	
 	@Path("/individual/{individual}")
@@ -445,8 +451,14 @@ public class Services {
 	@Produces("application/json")
 	public Response detailIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
-			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName) {
-		return Response.status(501).build();
+			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName) throws IOException, OntologyException {
+		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
+		Ontology ontology = readOntologyResponse.getOntology();
+		IndividualDetailResponseModel res = new IndividualDetailResponseModel();
+		res.setBranch(branch);
+		res.setLatestCommit(readOntologyResponse.getLatestCommit());
+		res.setData(ontology.detailIndividual(individualName));
+		return Response.ok(res).build();
 	}
 	
 	@Path("/individual/{individual}")
@@ -472,8 +484,11 @@ public class Services {
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName,
-			@Parameter(description = "Detalhes do novo indivíduo", required = true) IndividualCreateRequestModel body) {
-		return Response.status(501).build();
+			@Parameter(description = "Detalhes do novo indivíduo", required = true) IndividualCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
+		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+			ontology.createIndividual(individualName, body.getClassName(), body.getRelationships());
+		});
+		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
 	}
 
 
@@ -503,8 +518,11 @@ public class Services {
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName,
-			@Parameter(description = "Alterações a fazer ao indivíduo", required = true) IndividualAlterRequestModel body) {
-		return Response.status(501).build();
+			@Parameter(description = "Alterações a fazer ao indivíduo", required = true) IndividualAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
+		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+			ontology.alterIndividual(individualName, body.getNewIndividualName(), body.getClassName(), body.getRelationships());
+		});
+		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
 	}
 	
 	@Path("/individual/{individual}")
@@ -531,8 +549,11 @@ public class Services {
 	public Response deleteIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName) {
-		return Response.status(501).build();
+			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
+		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+			ontology.deleteIndividual(individualName);
+		});
+		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
 	}
 	
 	

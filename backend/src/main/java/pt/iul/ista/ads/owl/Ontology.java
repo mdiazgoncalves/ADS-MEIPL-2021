@@ -18,7 +18,6 @@ import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLEntity;
-import org.semanticweb.owlapi.model.OWLLogicalAxiom;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
@@ -28,6 +27,7 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.model.PrefixManager;
+import org.semanticweb.owlapi.model.parameters.Imports;
 import org.semanticweb.owlapi.search.EntitySearcher;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.semanticweb.owlapi.util.OWLEntityRemover;
@@ -35,6 +35,8 @@ import org.semanticweb.owlapi.util.OWLEntityRenamer;
 
 import pt.iul.ista.ads.models.ClassDetailResponseModel;
 import pt.iul.ista.ads.models.ClassesResponseModel;
+import pt.iul.ista.ads.models.IndividualDetailResponseModel;
+import pt.iul.ista.ads.models.IndividualRelationshipModel;
 import pt.iul.ista.ads.models.RelationshipDetailResponseModel;
 
 public class Ontology {
@@ -66,8 +68,7 @@ public class Ontology {
 			manager.saveOntology(ontology, baos);
 			return baos.toString(charset);
 		} catch(OWLOntologyStorageException e) {
-			e.printStackTrace();
-			return "Error in OWL generation";
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -179,7 +180,7 @@ public class Ontology {
 	}
 	
 	public List<String> listRelationships() {
-		return ontology.getObjectPropertiesInSignature().stream()
+		return ontology.objectPropertiesInSignature()
 				.map(property -> owlEntityToString(property))
 				.collect(Collectors.toList());
 	}
@@ -188,13 +189,11 @@ public class Ontology {
 		checkRelationshipExists(relationship);
 		List<RelationshipDetailResponseModel.RelationshipModel> res = new ArrayList<RelationshipDetailResponseModel.RelationshipModel>();
 		OWLObjectProperty property = factory.getOWLObjectProperty(":#" + relationship, prefixManager);
-		for(OWLLogicalAxiom axiom : ontology.getLogicalAxioms()) {
-			if(axiom.isOfType(AxiomType.OBJECT_PROPERTY_ASSERTION)
-					&& axiom.getObjectPropertiesInSignature().contains(property)) {
+		for(OWLObjectPropertyAssertionAxiom axiom : ontology.getAxioms(AxiomType.OBJECT_PROPERTY_ASSERTION, Imports.EXCLUDED)) {
+			if(axiom.getObjectPropertiesInSignature().contains(property)) {
 				RelationshipDetailResponseModel.RelationshipModel relationshipModel = new RelationshipDetailResponseModel.RelationshipModel();
-				OWLObjectPropertyAssertionAxiom x = (OWLObjectPropertyAssertionAxiom) axiom;
-				relationshipModel.setIndividual1(owlEntityToString((OWLNamedIndividual) x.getSubject()));
-				relationshipModel.setIndividual2(owlEntityToString((OWLNamedIndividual) x.getObject()));
+				relationshipModel.setIndividual1(owlEntityToString((OWLNamedIndividual) axiom.getSubject()));
+				relationshipModel.setIndividual2(owlEntityToString((OWLNamedIndividual) axiom.getObject()));
 				res.add(relationshipModel);
 			}
 		}
@@ -245,9 +244,8 @@ public class Ontology {
 			property = newProperty; // reassign para código abaixo se referir à nova property
 		}
 		if(className1 != null) {
-			for(OWLLogicalAxiom axiom : ontology.getLogicalAxioms()) {
-				if(axiom.isOfType(AxiomType.OBJECT_PROPERTY_DOMAIN)
-						&& axiom.getObjectPropertiesInSignature().contains(property)) {
+			for(OWLAxiom axiom : ontology.getAxioms(AxiomType.OBJECT_PROPERTY_DOMAIN, Imports.EXCLUDED)) {
+				if(axiom.getObjectPropertiesInSignature().contains(property)) {
 					ontology.removeAxiom(axiom);
 					break;
 				}
@@ -257,9 +255,8 @@ public class Ontology {
 			manager.addAxiom(ontology, domainAxiom);
 		}
 		if(className2 != null) {
-			for(OWLLogicalAxiom axiom : ontology.getLogicalAxioms()) {
-				if(axiom.isOfType(AxiomType.OBJECT_PROPERTY_RANGE)
-						&& axiom.getObjectPropertiesInSignature().contains(property)) {
+			for(OWLAxiom axiom : ontology.getAxioms(AxiomType.OBJECT_PROPERTY_RANGE, Imports.EXCLUDED)) {
+				if(axiom.getObjectPropertiesInSignature().contains(property)) {
 					ontology.removeAxiom(axiom);
 					break;
 				}
@@ -278,4 +275,106 @@ public class Ontology {
 		manager.applyChanges(remover.getChanges());
 	}
 	
+	public List<String> listIndividuals() {
+		return ontology.individualsInSignature()
+				.map(individual -> owlEntityToString(individual))
+				.collect(Collectors.toList());
+	}
+	
+	public IndividualDetailResponseModel.IndividualModel detailIndividual(String individualName) throws IndividualNotFoundOntologyException {
+		checkIndividualExists(individualName);
+		IndividualDetailResponseModel.IndividualModel res = new IndividualDetailResponseModel.IndividualModel();
+		OWLNamedIndividual individual = factory.getOWLNamedIndividual(":#" + individualName, prefixManager);
+		OWLClass cls = ontology.classAssertionAxioms(individual).findFirst().get().classesInSignature().findFirst().get();
+		res.setClassName(owlEntityToString(cls));
+		res.setRelationships(new ArrayList<IndividualRelationshipModel>());
+		for(OWLObjectPropertyAssertionAxiom axiom : ontology.getObjectPropertyAssertionAxioms(individual)) {
+			IndividualRelationshipModel individualRelationship = new IndividualRelationshipModel();
+			individualRelationship.setIndividual2(owlEntityToString((OWLNamedIndividual) axiom.getObject()));
+			individualRelationship.setRelationshipName(owlEntityToString(axiom.getProperty().getNamedProperty()));
+			res.getRelationships().add(individualRelationship);
+		}
+		return res;
+	}
+	
+	private void checkIndividualExists(String individual) throws IndividualNotFoundOntologyException {
+		if(!ontology.containsIndividualInSignature(IRI.create(documentIRI.toString() + "#" + individual)))
+			throw new IndividualNotFoundOntologyException(individual);
+	}
+	
+	private void checkIndividualNotExists(String individual) throws IndividualAlreadyExistsOntologyException {
+		if(ontology.containsIndividualInSignature(IRI.create(documentIRI.toString() + "#" + individual)))
+			throw new IndividualAlreadyExistsOntologyException(individual);
+	}
+	
+	public void createIndividual(String individualName, String className, List<IndividualRelationshipModel> relationships) throws IndividualAlreadyExistsOntologyException, ClassNotFoundOntologyException, RelationshipNotFoundOntologyException, IndividualNotFoundOntologyException {
+		checkIndividualNotExists(individualName);
+		checkClassExists(className);
+		checkValidIndividualRelationshipModels(relationships);
+		
+		OWLNamedIndividual individual = factory.getOWLNamedIndividual(":#" + individualName, prefixManager);
+		OWLClass cls = factory.getOWLClass(":#" + className, prefixManager);
+		OWLAxiom individualAxiom = factory.getOWLClassAssertionAxiom(cls, individual);
+		ontology.addAxiom(individualAxiom);
+		replaceIndividualRelationships(individual, relationships);
+	}
+	
+	private void checkValidIndividualRelationshipModels(List<IndividualRelationshipModel> relationships) throws RelationshipNotFoundOntologyException, IndividualNotFoundOntologyException {
+		for(IndividualRelationshipModel relationship : relationships) {
+			checkRelationshipExists(relationship.getRelationshipName());
+			checkIndividualExists(relationship.getIndividual2());
+		}
+	}
+	
+	// este método não valida se as relações existem nem se os indivíduos existem
+	// necessário invocar checkValidIndividualRelationshipModels primeiro
+	private void replaceIndividualRelationships(OWLNamedIndividual individual, List<IndividualRelationshipModel> relationships) {
+		for(OWLObjectPropertyAssertionAxiom axiom : ontology.getObjectPropertyAssertionAxioms(individual)) {
+			ontology.remove(axiom);
+		}
+		for(IndividualRelationshipModel relationship : relationships) {
+			OWLObjectProperty property = factory.getOWLObjectProperty(":#" + relationship.getRelationshipName(), prefixManager);
+			OWLNamedIndividual individual2 = factory.getOWLNamedIndividual(":#" + relationship.getIndividual2(), prefixManager);
+			OWLAxiom axiom = factory.getOWLObjectPropertyAssertionAxiom(property, individual, individual2);
+			ontology.addAxiom(axiom);
+		}
+	}
+	
+	public void alterIndividual(String individualName, String newIndividualName, String newClassName, List<IndividualRelationshipModel> relationships) throws IndividualNotFoundOntologyException, IndividualAlreadyExistsOntologyException, ClassNotFoundOntologyException, RelationshipNotFoundOntologyException {
+		checkIndividualExists(individualName);
+		if(newIndividualName != null)
+			checkIndividualNotExists(newIndividualName);
+		if(newClassName != null)
+			checkClassExists(newClassName);
+		if(relationships != null)
+			checkValidIndividualRelationshipModels(relationships);
+		
+		OWLNamedIndividual individual = factory.getOWLNamedIndividual(":#" + individualName, prefixManager);
+		if(newIndividualName != null) {
+			OWLEntityRenamer renamer = new OWLEntityRenamer(manager, Collections.singleton(ontology));
+			OWLNamedIndividual newIndividual = factory.getOWLNamedIndividual(":#" + newIndividualName, prefixManager);
+			manager.applyChanges(renamer.changeIRI(individual.getIRI(), newIndividual.getIRI()));
+			individual = newIndividual; // reassign para código abaixo se referir ao novo indivíduo
+		}
+		if(newClassName != null) {
+			OWLAxiom classAxiom = ontology.classAssertionAxioms(individual).findFirst().get();
+			ontology.removeAxiom(classAxiom);
+			OWLClass cls = factory.getOWLClass(":#" + newClassName, prefixManager);
+			OWLAxiom individualAxiom = factory.getOWLClassAssertionAxiom(cls, individual);
+			ontology.addAxiom(individualAxiom);
+		}
+		if(relationships != null) {
+			replaceIndividualRelationships(individual, relationships);
+		}
+	}
+	
+	
+	
+	public void deleteIndividual(String individualName) throws IndividualNotFoundOntologyException {
+		checkIndividualExists(individualName);
+		OWLEntityRemover remover = new OWLEntityRemover(Collections.singleton(ontology));
+		OWLNamedIndividual individual = factory.getOWLNamedIndividual(":#" + individualName, prefixManager);
+		individual.accept(remover);
+		manager.applyChanges(remover.getChanges());
+	}
 }
