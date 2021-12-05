@@ -1,15 +1,6 @@
 package pt.iul.ista.ads.github;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpClient.Redirect;
-import java.net.http.HttpClient.Version;
-import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
@@ -24,6 +15,11 @@ import com.google.gson.JsonParser;
 import io.fusionauth.jwt.Signer;
 import io.fusionauth.jwt.domain.JWT;
 import io.fusionauth.jwt.rsa.RSASigner;
+import okhttp3.Call;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import pt.iul.ista.ads.utils.Utils;
 
 class GithubOperationsBase {
@@ -37,6 +33,8 @@ class GithubOperationsBase {
 	private static ZonedDateTime token_expires_at;
 	
 	private static GHRepository repository;
+	
+	protected static final OkHttpClient client = new OkHttpClient();
 	
 	private static boolean shouldRefresh() {
 		ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
@@ -65,29 +63,27 @@ class GithubOperationsBase {
 			String authorizationHeader = "Bearer " + jwt;
 			
 			// get access tokens URL
-			HttpClient client = HttpClient.newBuilder()
-					.followRedirects(Redirect.NORMAL)
-					.version(Version.HTTP_1_1)
+			Request request = new Request.Builder()
+					.url(githubApiUrl)
+					.addHeader("Authorization", authorizationHeader)
 					.build();
-			HttpRequest request = HttpRequest.newBuilder()
-					.uri(new URI(githubApiUrl))
-					.setHeader("Authorization", authorizationHeader)
-					.build();
-			HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+			Call call = client.newCall(request);
+			Response response = call.execute();
 			
-			JsonArray responseArray = JsonParser.parseString(response.body()).getAsJsonArray();
+			JsonArray responseArray = JsonParser.parseString(response.body().string()).getAsJsonArray();
 			JsonObject responseObject = responseArray.get(0).getAsJsonObject();
 			String accessTokensUrl = responseObject.get("access_tokens_url").getAsString();
 			
 			// get access token
-			request = HttpRequest.newBuilder()
-					.uri(new URI(accessTokensUrl))
-					.setHeader("Authorization", authorizationHeader)
-					.POST(BodyPublishers.noBody())
+			request = new Request.Builder()
+					.url(accessTokensUrl)
+					.addHeader("Authorization", authorizationHeader)
+					.post(RequestBody.create("", null))
 					.build();
-			response = client.send(request, BodyHandlers.ofString());
+			call = client.newCall(request);
+			response = call.execute();
 			
-			responseObject = JsonParser.parseString(response.body()).getAsJsonObject(); 
+			responseObject = JsonParser.parseString(response.body().string()).getAsJsonObject(); 
 
 			token = responseObject.get("token").getAsString();
 			token_expires_at = ZonedDateTime.parse(responseObject.get("expires_at").getAsString());
@@ -95,7 +91,7 @@ class GithubOperationsBase {
 			GitHub github = new GitHubBuilder().withAppInstallationToken(token).build();
 			repository = github.getRepository("ads-meipl/knowledge-base");
 			
-		} catch(InterruptedException | IOException | URISyntaxException e) {
+		} catch(IOException e) {
 			throw new RuntimeException(e);
 		}
 	}

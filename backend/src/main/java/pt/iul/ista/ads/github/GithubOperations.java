@@ -1,15 +1,6 @@
 package pt.iul.ista.ads.github;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpClient.Redirect;
-import java.net.http.HttpClient.Version;
-import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Base64;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -22,6 +13,11 @@ import org.kohsuke.github.GHTreeEntry;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import okhttp3.Call;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import pt.iul.ista.ads.owl.Ontology;
 import pt.iul.ista.ads.owl.OntologyException;
 
@@ -130,24 +126,17 @@ public class GithubOperations extends GithubOperationsBase {
 		// versão original deste método, usando a biblioteca java:
 		//return repository.getCommit(branch).getSHA1();
 		// por vezes não funciona como desejado, por isso vamos usar a api REST diretamente
-		try {
-			String authorizationHeader = "Bearer " + getGithubAccessToken();
-			
-			HttpClient client = HttpClient.newBuilder()
-					.followRedirects(Redirect.NORMAL)
-					.version(Version.HTTP_1_1)
-					.build();
-			
-			HttpRequest request = HttpRequest.newBuilder()
-					.uri(new URI("https://api.github.com/repos/ads-meipl/knowledge-base/commits/" + branch))
-					.setHeader("Authorization", authorizationHeader)
-					.build();
-			HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-			JsonObject responseObject = JsonParser.parseString(response.body()).getAsJsonObject();
-			return responseObject.get("sha").getAsString();
-		} catch(URISyntaxException | InterruptedException e) {
-			throw new RuntimeException(e);
-		}
+		String authorizationHeader = "Bearer " + getGithubAccessToken();
+
+		Request request = new Request.Builder()
+				.url("https://api.github.com/repos/ads-meipl/knowledge-base/commits/" + branch)
+				.addHeader("Authorization", authorizationHeader)
+				.build();
+		Call call = client.newCall(request);
+		Response response = call.execute();
+		
+		JsonObject responseObject = JsonParser.parseString(response.body().string()).getAsJsonObject();
+		return responseObject.get("sha").getAsString();
 	}
 	
 	public static boolean isValidBranch(String branch) {
@@ -167,25 +156,22 @@ public class GithubOperations extends GithubOperationsBase {
 			
 			String authorizationHeader = "Bearer " + getGithubAccessToken();
 			
-			HttpClient client = HttpClient.newBuilder()
-					.followRedirects(Redirect.NORMAL)
-					.version(Version.HTTP_1_1)
-					.build();
-			
 			JsonObject bodyObject = new JsonObject();
 			bodyObject.addProperty("ref", "refs/heads/" + branch);
 			bodyObject.addProperty("sha", latestCommitInMain);
 			String body = bodyObject.toString();
 			
-			HttpRequest request = HttpRequest.newBuilder()
-					.uri(new URI("https://api.github.com/repos/ads-meipl/knowledge-base/git/refs"))
-					.setHeader("Authorization", authorizationHeader)
-					.POST(BodyPublishers.ofString(body))
+			RequestBody requestBody = RequestBody.create(body, MediaType.parse("application/json"));
+			Request request = new Request.Builder()
+					.url("https://api.github.com/repos/ads-meipl/knowledge-base/git/refs")
+					.addHeader("Authorization", authorizationHeader)
+					.post(requestBody)
 					.build();
-			HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+			Call call = client.newCall(request);
+			Response response = call.execute();
 			
-			if(response.statusCode() == 422) {
-				JsonObject responseObject = JsonParser.parseString(response.body()).getAsJsonObject();
+			if(response.code() == 422) {
+				JsonObject responseObject = JsonParser.parseString(response.body().string()).getAsJsonObject();
 				String message = responseObject.get("message").getAsString();
 				if(message.contains("is not a valid ref name")) {
 					throw new InvalidBranchException();
@@ -195,8 +181,6 @@ public class GithubOperations extends GithubOperationsBase {
 					throw new RuntimeException(message);
 				}
 			}
-		} catch(URISyntaxException | InterruptedException e) {
-			throw new RuntimeException(e);
 		} finally {
 			unlockBranch(branch);
 		}
