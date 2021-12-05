@@ -579,12 +579,18 @@ public class Services {
 				description = "Branch informado mas falta o commit ou erro de sintaxe na query",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	@Consumes("application/json")
+	@Consumes("text/plain")
 	public Response query(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente") @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
-			@Parameter(description = "Query", required = true) String query) {
-		return Response.status(501).build();
+			@Parameter(description = "Query", required = true) String query) throws IOException, OntologyException {
+		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
+		Ontology ontology = readOntologyResponse.getOntology();
+		QueryResponseModel res = new QueryResponseModel();
+		res.setBranch(branch);
+		res.setLatestCommit(readOntologyResponse.getLatestCommit());
+		res.setData(ontology.query(query));
+		return Response.ok(res).build();
 	}
 	
 	
