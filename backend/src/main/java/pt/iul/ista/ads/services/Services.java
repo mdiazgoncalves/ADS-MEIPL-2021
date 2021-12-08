@@ -111,14 +111,9 @@ public class Services {
 		description = "Retorna a árvore de classes existentes na base de conhecimento",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				content = @Content(schema = @Schema(implementation = ClassesResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
+				content = @Content(schema = @Schema(implementation = ClassesResponseModel.class)))})
 	@Produces("application/json")
-	public Response listClasses(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
-			@Parameter(description = "Token de autorização") @QueryParam("token") String token) throws IOException, OntologyException, UnauthorizedException {
-		Authorization.checkValidToken(branch, token, OperationType.READ);
+	public Response listClasses(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch) throws IOException, OntologyException {
 		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
 		Ontology ontology = readOntologyResponse.getOntology();
 		ClassesResponseModel res = new ClassesResponseModel();
@@ -137,17 +132,12 @@ public class Services {
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
 				content = @Content(schema = @Schema(implementation = ClassDetailResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Classe não existe",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response detailClass(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
-			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
-			@Parameter(description = "Nome de classe") @PathParam("class") String className) throws IOException, OntologyException, UnauthorizedException {
-		Authorization.checkValidToken(branch, token, OperationType.READ);
+			@Parameter(description = "Nome de classe") @PathParam("class") String className) throws IOException, OntologyException {
 		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
 		Ontology ontology = readOntologyResponse.getOntology();
 		ClassDetailResponseModel res = new ClassDetailResponseModel();
@@ -168,9 +158,6 @@ public class Services {
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "400",
 				description = "Branch e/ou commit não informado ou nome de classe já existe na ontologia ou superclasse não existe",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
@@ -181,11 +168,8 @@ public class Services {
 	@Consumes("application/json")
 	public Response createClass(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className,
-			@Parameter(description = "Detalhes da nova classe", required = true) ClassCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, UnauthorizedException {
-		Authorization.checkValidToken(branch, token, OperationType.EDIT);
-		
+			@Parameter(description = "Detalhes da nova classe", required = true) ClassCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
 		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
 			ontology.addClass(className, body.getSuperClassName());
 		});
@@ -205,9 +189,6 @@ public class Services {
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "400",
 				description = "Branch e/ou commit não informado ou nome de classe já existe na ontologia ou superclasse não existe",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
@@ -218,11 +199,8 @@ public class Services {
 	@Consumes("application/json")
 	public Response alterClass(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className,
-			@Parameter(description = "Alterações a fazer à classe", required = true) ClassAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, UnauthorizedException {
-		Authorization.checkValidToken(branch, token, OperationType.EDIT);
-		
+			@Parameter(description = "Alterações a fazer à classe", required = true) ClassAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
 		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
 			ontology.alterClass(className, body.getNewClassName(), body.getNewSuperClass());
 		});
@@ -240,9 +218,6 @@ public class Services {
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "400",
 				description = "Branch e/ou commit não informado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
@@ -252,9 +227,7 @@ public class Services {
 	@Produces("application/json")
 	public Response deleteClass(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome de classe") @PathParam("class") String className) throws UnauthorizedException, OldCommitException, IOException, OntologyException, InvalidBranchException {
-		Authorization.checkValidToken(branch, token, OperationType.EDIT);
+			@Parameter(description = "Nome de classe") @PathParam("class") String className) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
 		
 		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
 			ontology.deleteClass(className);
@@ -271,13 +244,9 @@ public class Services {
 		description = "Retorna uma lista das relações existentes",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				content = @Content(schema = @Schema(implementation = RelationshipsResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
+				content = @Content(schema = @Schema(implementation = RelationshipsResponseModel.class)))})
 	@Produces("application/json")
-	public Response listRelationships(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
-			@Parameter(description = "Token de autorização") @QueryParam("token") String token) throws IOException, OntologyException {
+	public Response listRelationships(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch) throws IOException, OntologyException {
 		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
 		Ontology ontology = readOntologyResponse.getOntology();
 		RelationshipsResponseModel res = new RelationshipsResponseModel();
@@ -295,15 +264,11 @@ public class Services {
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
 				content = @Content(schema = @Schema(implementation = RelationshipDetailResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Relação não existe",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response detailRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
-			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName) throws IOException, OntologyException {
 		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
 		Ontology ontology = readOntologyResponse.getOntology();
@@ -326,9 +291,6 @@ public class Services {
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "400",
 				description = "Branch e/ou commit não informado ou nome de relação já existe na ontologia ou classes indicadas não existem",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
@@ -336,7 +298,6 @@ public class Services {
 	@Consumes("application/json")
 	public Response createRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName,
 			@Parameter(description = "Detalhes da nova relação", required = true) RelationshipCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
 		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
@@ -356,9 +317,6 @@ public class Services {
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "400",
 				description = "Branch e/ou commit não informado ou novo nome da relação já existe na ontologia ou classes não existem",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
@@ -369,7 +327,6 @@ public class Services {
 	@Consumes("application/json")
 	public Response alterRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName,
 			@Parameter(description = "Alterações a fazer à relação", required = true) RelationshipAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
 		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
@@ -389,9 +346,6 @@ public class Services {
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "400",
 				description = "Branch e/ou commit não informado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
@@ -401,7 +355,6 @@ public class Services {
 	@Produces("application/json")
 	public Response deleteRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
 		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
 			ontology.deleteRelationship(relationshipName);
@@ -418,13 +371,9 @@ public class Services {
 		description = "Retorna uma lista dos indivíduos existentes",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				content = @Content(schema = @Schema(implementation = IndividualsResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
+				content = @Content(schema = @Schema(implementation = IndividualsResponseModel.class)))})
 	@Produces("application/json")
-	public Response listIndividuals(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
-			@Parameter(description = "Token de autorização") @QueryParam("token") String token) throws IOException, OntologyException {
+	public Response listIndividuals(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch) throws IOException, OntologyException {
 		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
 		Ontology ontology = readOntologyResponse.getOntology();
 		IndividualsResponseModel res = new IndividualsResponseModel();
@@ -442,15 +391,11 @@ public class Services {
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
 						content = @Content(schema = @Schema(implementation = IndividualDetailResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Indivíduo não existe",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response detailIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
-			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName) throws IOException, OntologyException {
 		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
 		Ontology ontology = readOntologyResponse.getOntology();
@@ -472,9 +417,6 @@ public class Services {
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "400",
 				description = "Branch e/ou commit não informado ou nome de relação já existe na ontologia ou classes indicadas não existem",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
@@ -482,7 +424,6 @@ public class Services {
 	@Consumes("application/json")
 	public Response createIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName,
 			@Parameter(description = "Detalhes do novo indivíduo", required = true) IndividualCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
 		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
@@ -503,9 +444,6 @@ public class Services {
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "400",
 				description = "Branch e/ou commit não informado ou novo nome da relação já existe na ontologia ou classes não existem",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
@@ -516,7 +454,6 @@ public class Services {
 	@Consumes("application/json")
 	public Response alterIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName,
 			@Parameter(description = "Alterações a fazer ao indivíduo", required = true) IndividualAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
 		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
@@ -536,9 +473,6 @@ public class Services {
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "400",
 				description = "Branch e/ou commit não informado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
@@ -548,7 +482,6 @@ public class Services {
 	@Produces("application/json")
 	public Response deleteIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
 		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
 			ontology.deleteIndividual(individualName);
@@ -572,9 +505,6 @@ public class Services {
 				@ApiResponse(responseCode = "409",
 				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
 				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Não autorizado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "400",
 				description = "Branch informado mas falta o commit ou erro de sintaxe na query",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
@@ -582,7 +512,6 @@ public class Services {
 	@Consumes("text/plain")
 	public Response query(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente") @QueryParam("commit") String commit,
-			@Parameter(description = "Token de autorização") @QueryParam("token") String token,
 			@Parameter(description = "Query", required = true) String query) throws IOException, OntologyException {
 		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
 		Ontology ontology = readOntologyResponse.getOntology();
