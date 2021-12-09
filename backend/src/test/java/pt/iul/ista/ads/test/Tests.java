@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.junit.Test;
 
+import pt.iul.ista.ads.github.BranchNotFoundException;
 import pt.iul.ista.ads.github.GithubOperations;
 import pt.iul.ista.ads.github.InvalidBranchException;
 import pt.iul.ista.ads.github.OldCommitException;
@@ -24,7 +25,7 @@ public class Tests {
 //	}
 
 	@Test
-	public void testEditOntology() throws OldCommitException, IOException, OntologyException, InvalidBranchException {
+	public void testEditOntology() throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		String testBranch = "test@example.com";
 		String commit = GithubOperations.getLatestCommit(testBranch);
 		GithubOperations.editOntology(testBranch, commit, (ontology) -> {

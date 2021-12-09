@@ -2,10 +2,13 @@ package pt.iul.ista.ads.github;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import org.kohsuke.github.GHBlob;
+import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHContentUpdateResponse;
 import org.kohsuke.github.GHTree;
 import org.kohsuke.github.GHTreeEntry;
@@ -28,7 +31,7 @@ public class GithubOperations extends GithubOperationsBase {
 	private static final String owlPath = "knowledge-base.owl";
 	
 	// retorna hash do commit efetuado
-	public static String editOntology(String branch, String commit, OntologyEditorCallback callback) throws OldCommitException, IOException, OntologyException, InvalidBranchException {
+	public static String editOntology(String branch, String commit, OntologyEditorCallback callback) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		// check if branch is valid
 		if(!isValidBranch(branch))
 			throw new InvalidBranchException();
@@ -36,9 +39,7 @@ public class GithubOperations extends GithubOperationsBase {
 		lockBranch(branch);
 		try {
 			// check if commit is the latest commit
-			String latestCommit = getLatestCommit(branch);
-			if(!commit.equals(latestCommit))
-				throw new OldCommitException(latestCommit, branch);
+			checkIsLatestCommit(branch, commit);
 
 			GetOWLResponse getOWLResponse = getOWL(branch);
 			Ontology ontology = new Ontology(getOWLResponse.owl);
@@ -61,7 +62,13 @@ public class GithubOperations extends GithubOperationsBase {
 		}
 	}
 	
-	public static ReadOntologyResponse readOntology(String branch) throws IOException, OntologyException {
+	private static void checkIsLatestCommit(String branch, String commit) throws IOException, BranchNotFoundException, OldCommitException {
+		String latestCommit = getLatestCommit(branch);
+		if(!commit.equals(latestCommit))
+			throw new OldCommitException(latestCommit, branch);
+	}
+	
+	public static ReadOntologyResponse readOntology(String branch) throws IOException, OntologyException, BranchNotFoundException {
 		lockBranch(branch);
 		try {
 			String latestCommit = getLatestCommit(branch);
@@ -122,7 +129,7 @@ public class GithubOperations extends GithubOperationsBase {
 		locks.get(branch).unlock();
 	}
 	
-	public static String getLatestCommit(String branch) throws IOException {
+	public static String getLatestCommit(String branch) throws IOException, BranchNotFoundException {
 		// versão original deste método, usando a biblioteca java:
 		//return repository.getCommit(branch).getSHA1();
 		// por vezes não funciona como desejado, por isso vamos usar a api REST diretamente
@@ -135,6 +142,9 @@ public class GithubOperations extends GithubOperationsBase {
 		Call call = client.newCall(request);
 		Response response = call.execute();
 		
+		if(response.code() == 422)
+			throw new BranchNotFoundException(branch);
+		
 		JsonObject responseObject = JsonParser.parseString(response.body().string()).getAsJsonObject();
 		return responseObject.get("sha").getAsString();
 	}
@@ -144,11 +154,11 @@ public class GithubOperations extends GithubOperationsBase {
 	}
 
 	public static void createBranch(String branch) throws InvalidBranchException, IOException, BranchAlreadyExistsException {
-		if(!isValidBranch(branch))
+		if(!isValidBranch(branch)) // XXX pode causar nullpointerexception
 			throw new InvalidBranchException();
 
 		lockBranch(branch);
-		try {			
+		try {
 			String latestCommitInMain = getLatestCommit(getGHRepository().getDefaultBranch());
 
 			// não encontrei forma de criar branch com a biblioteca java
@@ -181,6 +191,8 @@ public class GithubOperations extends GithubOperationsBase {
 					throw new RuntimeException(message);
 				}
 			}
+		} catch(BranchNotFoundException e) {
+			throw new RuntimeException(e);
 		} finally {
 			unlockBranch(branch);
 		}
@@ -189,5 +201,20 @@ public class GithubOperations extends GithubOperationsBase {
 
 	public static String getDefaultBranch() {
 		return getGHRepository().getDefaultBranch();
+	}
+	
+	public static List<String> listBranches() throws IOException {
+		return getGHRepository().getBranches().keySet().stream().collect(Collectors.toList());
+	}
+	
+	public static void mergeBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException {
+		lockBranch(branchName);
+		try {
+			checkIsLatestCommit(branchName, commit);
+			GHBranch branch = getGHRepository().getBranch(branchName);
+			getGHRepository().getBranch(getDefaultBranch()).merge(branch, "User update through the application");
+		} finally {
+			unlockBranch(branchName);
+		}
 	}
 }
