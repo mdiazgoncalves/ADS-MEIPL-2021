@@ -154,7 +154,7 @@ public class GithubOperations extends GithubOperationsBase {
 	}
 
 	public static void createBranch(String branch) throws InvalidBranchException, IOException, BranchAlreadyExistsException {
-		if(!isValidBranch(branch)) // XXX pode causar nullpointerexception
+		if(!isValidBranch(branch))
 			throw new InvalidBranchException();
 
 		lockBranch(branch);
@@ -212,9 +212,46 @@ public class GithubOperations extends GithubOperationsBase {
 		try {
 			checkIsLatestCommit(branchName, commit);
 			GHBranch branch = getGHRepository().getBranch(branchName);
-			getGHRepository().getBranch(getDefaultBranch()).merge(branch, "User update through the application");
+			getGHRepository().getBranch(getDefaultBranch()).merge(branch, "Merge branch " + branchName);
+			deleteBranch(branchName, commit);
 		} finally {
 			unlockBranch(branchName);
 		}
+	}
+	
+	public static void deleteBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException {
+		checkIsLatestCommit(branchName, commit);
+		
+		String authorizationHeader = "Bearer " + getGithubAccessToken();
+		Request request = new Request.Builder()
+				.url("https://api.github.com/repos/ads-meipl/knowledge-base/git/refs/heads/" + branchName)
+				.addHeader("Authorization", authorizationHeader)
+				.delete()
+				.build();
+		Call call = client.newCall(request);
+		call.execute();
+	}
+	
+	public static void mergeBranchOwl(String branchName, String commit, String owl) throws IOException, BranchNotFoundException, OldCommitException {
+		lockBranch(branchName);
+		try {
+			checkIsLatestCommit(branchName, commit);
+			
+			GetOWLResponse getOWLResponse = getOWL(getDefaultBranch());
+			getGHRepository().createContent()
+					.branch(getDefaultBranch())
+					.path(owlPath)
+					.content(owl)
+					.message("Merge branch " + branchName)
+					.sha(getOWLResponse.sha)
+					.commit();
+			deleteBranch(branchName, commit);
+		} finally {
+			unlockBranch(branchName);
+		}
+	}
+	
+	public static String getBranchOwl(String branchName) throws IOException {
+		return getOWL(branchName).owl;
 	}
 }

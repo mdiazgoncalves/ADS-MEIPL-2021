@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import pt.iul.ista.ads.authorization.Authorization;
+import pt.iul.ista.ads.authorization.UnauthorizedException;
 import pt.iul.ista.ads.github.BranchAlreadyExistsException;
 import pt.iul.ista.ads.github.BranchNotFoundException;
 import pt.iul.ista.ads.github.GithubOperations;
@@ -42,41 +43,6 @@ public class Services {
 	// Autorização
 	// **************************************************
 	
-	@Path("/login/editor")
-	@POST
-	@Operation(tags = {"Autorização"},
-		summary = "Autoriza editor",
-		description = "Dado um email, é devolvido um token que autoriza o editor a trabalhar numa nova versão da ontologia. "
-				+ "Caso já exista um branch para esse email, não será devolvido token. "
-				+ "Será necessário que esse branch seja apagado primeiro, ao ser rejeitado ou aceitado por um curador.",
-		responses = {@ApiResponse(responseCode = "200",
-				description = "OK",
-				content = @Content(schema = @Schema(implementation = String.class))),
-				@ApiResponse(responseCode = "400",
-				description = "Email não informado ou é inválido",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
-				@ApiResponse(responseCode = "401",
-				description = "Email já registado",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
-	@Produces("application/json")
-	public Response loginEditor(@Parameter(description = "Email do editor", required = true) @QueryParam("email") String email) throws InvalidBranchException, IOException {
-		if(!Utils.validateEmail(email)) {
-			ErrorResponseModel res = new ErrorResponseModel("invalid email");
-			return Response.status(400).entity(res).build();
-		}
-
-		String branch = email.toLowerCase();
-		try {
-			GithubOperations.createBranch(branch);
-		} catch(BranchAlreadyExistsException e) {
-			// vamos ignorar o facto de que o branch já existe e vamos autorizar o editor na mesma
-			// isto dá jeito para testes iniciais
-			// no futuro vamos querer rejeitar o pedido
-		}
-		
-		return Response.ok(Authorization.generateEditorToken(branch)).build();
-	}
-	
 	@Path("/login/curator")
 	@POST
 	@Operation(tags = {"Autorização"},
@@ -85,15 +51,12 @@ public class Services {
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
 				content = @Content(schema = @Schema(implementation = String.class))),
-				@ApiResponse(responseCode = "400",
-				description = "Password não informada",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "401",
 				description = "Password inválida",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response loginCurator(@Parameter(description = "Password do curador", required = true) @QueryParam("password") String password) {
-		return Response.status(501).build();
+	public Response loginCurator(@Parameter(description = "Password do curador", required = true) @QueryParam("password") String password) throws UnauthorizedException {
+		return Response.ok(Authorization.generateToken(password)).build();
 	}
 	
 	
@@ -500,17 +463,10 @@ public class Services {
 		description = "Executa query e retorna lista de indivíduos",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class)))),
-				@ApiResponse(responseCode = "409",
-				description = "Parâmetro \"commit\" não se refere ao commit mais recente",
-				content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
-				@ApiResponse(responseCode = "400",
-				description = "Branch informado mas falta o commit ou erro de sintaxe na query",
-				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
+				content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class))))})
 	@Produces("application/json")
 	@Consumes("text/plain")
 	public Response query(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
-			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente") @QueryParam("commit") String commit,
 			@Parameter(description = "Query", required = true) String query) throws IOException, OntologyException, BranchNotFoundException {
 		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
 		Ontology ontology = readOntologyResponse.getOntology();
@@ -538,7 +494,8 @@ public class Services {
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response listBranches(@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token) throws IOException {
+	public Response listBranches(@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token) throws IOException, UnauthorizedException {
+		Authorization.checkValidToken(token);
 		return Response.ok(GithubOperations.listBranches()).build();
 	}
 	
@@ -561,7 +518,8 @@ public class Services {
 	@Produces("application/json")
 	public Response mergeBranch(@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException {
+			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException {
+		Authorization.checkValidToken(token);
 		GithubOperations.mergeBranch(branch, commit);
 		return Response.ok().build();
 	}
@@ -585,8 +543,10 @@ public class Services {
 	@Produces("application/json")
 	public Response deleteBranch(@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) {
-		return Response.status(501).build();
+			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException {
+		Authorization.checkValidToken(token);
+		GithubOperations.deleteBranch(branch, commit);
+		return Response.ok().build();
 	}
 	
 	@Path("/branch/{branch}/owl")
@@ -596,9 +556,6 @@ public class Services {
 	description = "Devolve o OWL do branch, de maneira a que o curador possa alterar o OWL manualmente de forma a fazer merge",
 	responses = {@ApiResponse(responseCode = "200",
 			description = "OK"),
-			@ApiResponse(responseCode = "409",
-			description = "Parâmetro \"commit\" não se refere ao commit mais recente",
-			content = @Content(schema = @Schema(implementation = LatestCommitResponseModel.class))),
 			@ApiResponse(responseCode = "401",
 			description = "Não autorizado",
 			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
@@ -606,10 +563,10 @@ public class Services {
 			description = "Branch inexistente",
 			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/xml")
-	public Response getBranchOwl(@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) {
-		return Response.status(501).build();
+	public Response getBranchOwl(@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
+			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, UnauthorizedException {
+		Authorization.checkValidToken(token);
+		return Response.ok(GithubOperations.getBranchOwl(branch)).build();
 	}
 	
 	@Path("/branch/{branch}/mergeowl")
@@ -632,8 +589,10 @@ public class Services {
 	public Response mergeBranchOwl(@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch,
-			@Parameter(description = "OWL a substituir a versão existente") String body) {
-		return Response.status(501).build();
+			@Parameter(description = "OWL a substituir a versão existente") String body) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException {
+		Authorization.checkValidToken(token);
+		GithubOperations.mergeBranchOwl(branch, commit, body);
+		return Response.ok().build();
 	}
 	
 	@Path("/branch/{branch}/latest")
@@ -652,8 +611,36 @@ public class Services {
 			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response branchLatestCommit(@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) {
-		return Response.status(501).build();
+			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException {
+		String commit = GithubOperations.getLatestCommit(branch);
+		LatestCommitResponseModel res = new LatestCommitResponseModel(commit, branch);
+		return Response.ok(res).build();
+	}
+	
+	@Path("/branch/{branch}")
+	@POST
+	@Operation(tags = {"Versionamento"},
+	summary = "Cria novo branch",
+	description = "Cria novo branch a partir do OWL que se encontra no branch principal. Esta operação não requer token pois pode ser despoletada por um editor.",
+	responses = {@ApiResponse(responseCode = "200",
+			description = "OK"),
+			@ApiResponse(responseCode = "400",
+			description = "Branch já existe ou branch não corresponde a um email válido",
+			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
+	@Produces("application/json")
+	public Response createBranch(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws InvalidBranchException, IOException {
+		if(!Utils.validateEmail(branch)) {
+			ErrorResponseModel res = new ErrorResponseModel("invalid email");
+			return Response.status(400).entity(res).build();
+		}
+
+		String branchLower = branch.toLowerCase();
+		try {
+			GithubOperations.createBranch(branchLower);
+		} catch(BranchAlreadyExistsException e) {
+			return Response.status(400).entity(new ErrorResponseModel("branch already exists")).build();
+		}
+		return Response.ok().build();
 	}
 	
 }
