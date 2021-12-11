@@ -41,6 +41,7 @@ public class Main {
 
         FilterHolder filterHolder = context.addFilter(CrossOriginFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         filterHolder.setInitParameter("allowedOrigins", "*");
+        filterHolder.setInitParameter("supportedMethods", "GET, HEAD, POST, PUT, OPTIONS, DELETE");
         
         server.start();
         server.join();
