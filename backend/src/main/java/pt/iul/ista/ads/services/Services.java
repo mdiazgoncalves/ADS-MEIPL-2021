@@ -643,4 +643,21 @@ public class Services {
 		return Response.ok().build();
 	}
 	
+	@Path("/branch/{branch}/sync")
+	@POST
+	@Operation(tags = {"Versionamento"},
+	summary = "Sincroniza branch com main",
+	description = "Descarta alterações no branch (se existirem) e sincroniza o branch com o main",
+	responses = {@ApiResponse(responseCode = "200",
+			description = "OK"),
+			@ApiResponse(responseCode = "404",
+			description = "Branch não existe",
+			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
+	@Produces("application/json")
+	public Response syncBranch(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException, BranchAlreadyExistsException {
+		GithubOperations.syncBranch(branch);
+		return Response.ok().build();
+	}
+	
+	
 }

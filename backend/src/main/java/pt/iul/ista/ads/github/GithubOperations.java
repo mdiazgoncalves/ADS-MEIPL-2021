@@ -254,4 +254,10 @@ public class GithubOperations extends GithubOperationsBase {
 	public static String getBranchOwl(String branchName) throws IOException {
 		return getOWL(branchName).owl;
 	}
+	
+	public static void syncBranch(String branchName) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException, BranchAlreadyExistsException {
+		String commit = getLatestCommit(branchName);
+		deleteBranch(branchName, commit);
+		createBranch(branchName);
+	}
 }
