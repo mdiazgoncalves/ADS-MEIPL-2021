@@ -6,6 +6,7 @@
 import ClassCardsGrid from "@/components/ClassCardsGrid";
 import {inject, onActivated, ref, watch} from "vue";
 import {useStore} from "vuex";
+import {useRoute} from "vue-router";
 
 export default {
   name: "Classes",
@@ -14,6 +15,7 @@ export default {
     const axios = inject('axios');
     const store = useStore()
     const classes = ref([]);
+    const route = useRoute()
 
     const fetchClasses = async (branch) => {
       classes.value = []
@@ -39,13 +41,19 @@ export default {
     onActivated(async () => await fetchClasses(store.getters.branch))
 
     watch(() => store.getters.branch, async (branch) => {
-      await fetchClasses(branch);
+      if (route.name === "Classes") {
+        await fetchClasses(branch);
+      }
     })
 
     const deleteClass = async (className) => {
       await store.dispatch('setLoading', `Deleting class ${className}…`);
       try {
-        const response = await axios.delete(`https://knowledge-base-ads-test2.herokuapp.com/class/${className}?branch=${store.getters.branch}&commit=${store.getters.commit}`)
+        let endpoint = `https://knowledge-base-ads-test2.herokuapp.com/class/${className}?branch=${store.getters.branch}&commit=${store.getters.commit}`
+        if(store.getters.branch === "main") {
+          endpoint += `&token=${store.getters.token}`
+        }
+        const response = await axios.delete(endpoint)
         console.log(response)
         await fetchClasses(store.getters.branch)
       } catch (e) {
@@ -57,7 +65,11 @@ export default {
     const addClass = async ({className, superClass}) => {
       await store.dispatch('setLoading', `Adding class ${className}…`);
       try {
-        const response = await axios.post(`https://knowledge-base-ads-test2.herokuapp.com/class/${className}?branch=${store.getters.branch}&commit=${store.getters.commit}`, {superClassName: superClass === undefined || superClass.length === 0 ? null : superClass})
+        let endpoint = `https://knowledge-base-ads-test2.herokuapp.com/class/${className}?branch=${store.getters.branch}&commit=${store.getters.commit}`
+        if(store.getters.branch === "main") {
+          endpoint += `&token=${store.getters.token}`
+        }
+        const response = await axios.post(endpoint, {superClassName: superClass === undefined || superClass.length === 0 ? null : superClass})
         console.log(response)
         await fetchClasses(store.getters.branch)
       } catch (e) {

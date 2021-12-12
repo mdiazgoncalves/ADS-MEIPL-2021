@@ -4,8 +4,8 @@
       <header>
         <h2>Main branch</h2>
         <div class="actions">
-          <div class="copy" @click="copy(mainOwl)">Copy</div>
-          <div @click="resultOwl = mainOwl">&#x21AA;</div>
+          <div class="action copy" @click="copy(mainOwl)">Copy</div>
+          <div class="action" @click="resultOwl = mainOwl">&#x21AA;</div>
         </div>
       </header>
       <code class="code-block">{{ mainOwl }}</code>
@@ -22,8 +22,8 @@
     <div class="branch">
       <header>
         <div class="actions">
-          <div @click="resultOwl = branchOwl">&#x21A9;</div>
-          <div class="copy" @click="copy(branchOwl)">Copy</div>
+          <div class="action" @click="resultOwl = branchOwl">&#x21A9;</div>
+          <div class="action copy" @click="copy(branchOwl)">Copy</div>
         </div>
         <h2>{{ branch }}</h2>
       </header>
@@ -149,7 +149,7 @@ export default {
   gap: 8px;
 }
 
-#merge-container > div > header > .actions > div {
+#merge-container > div > header > .actions > .action {
   cursor: pointer;
   padding: 4px 10px 0;
   border: solid 1px var(--primary);
@@ -157,7 +157,7 @@ export default {
   border-radius: 20px;
 }
 
-#merge-container > div > header > .actions > div:hover {
+#merge-container > div > header > .actions > .action:hover {
   background-color: var(--primary);
   border: solid 1px transparent;
   color: white;

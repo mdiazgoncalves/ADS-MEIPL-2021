@@ -1,9 +1,21 @@
 <template>
   <div id="branches-container">
-    <div :class="{'branch': true, 'main': branch === 'main'}" v-for="branch in branches" :key="branch" @click="merge(branch)">
-      <h2 class="branch-name">{{ branch }}</h2>
-      <div class="actions" v-if="branch !== 'main'">
-        <div class="delete" @click="onDelete(branch)">&cross;</div>
+    <div :class="{'branch': true, 'main': branch.branchName === 'main'}" v-for="branch in branches"
+         :key="branch.branchName"
+         @click="selectBranch(branch.branchName)">
+      <div class="branch-name-selected">
+        <div v-if="selectedBranch === branch.branchName" class="selected"> --></div>
+        <h2 class="branch-name">{{ branch.branchName }}</h2>
+      </div>
+      <div class="info">
+        <div class="last-update">Last update: {{ formatDate(branch.lastCommitDate) }}</div>
+        <div class="actions" v-if="branch.branchName !== 'main'">
+          <div class="merge" @click.stop="merge(branch.branchName)">
+            <img :src="mergeIcon" alt="Merge" class="merge-icon"/>
+          </div>
+          <div class="delete" @click.stop="onDelete(branch.branchName)">&cross;
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -11,25 +23,27 @@
 
 <script>
 import {useStore} from "vuex";
-import {onActivated, ref, watch} from "vue";
-import {useRouter} from "vue-router";
+import {computed, onActivated, ref, watch} from "vue";
+import {useRoute, useRouter} from "vue-router";
 import axios from "axios";
 
 export default {
   name: "Branches",
   setup() {
     const router = useRouter()
+    const route = useRoute()
     const store = useStore()
     const branches = ref([])
+    const selectedBranch = computed(() => store.getters.branch ?? "main")
 
     onActivated(() => {
-      if(store.getters.token == null) {
+      if (store.getters.token == null) {
         router.push("/");
       }
     })
 
     const fetchBranches = async () => {
-      if(store.getters.token == null) return;
+      if (store.getters.token == null) return;
       branches.value = []
       await store.dispatch('setLoading', "Loading branches…");
       const response = await axios.get(`https://knowledge-base-ads-test2.herokuapp.com/branches?token=${store.getters.token}`);
@@ -39,12 +53,14 @@ export default {
     }
 
     watch(() => store.getters.token, async () => {
-      await fetchBranches();
+      if (route.name === "Branches") {
+        await fetchBranches();
+      }
     })
 
     onActivated(async () => await fetchBranches())
 
-    const onDelete = async(branch) => {
+    const onDelete = async (branch) => {
       await store.dispatch('setLoading', `Deleting branch ${branch}…`);
       try {
         const latestResponse = await axios.get(`https://knowledge-base-ads-test2.herokuapp.com/branch/${branch}/latest?token=${store.getters.token}`);
@@ -59,16 +75,28 @@ export default {
       await store.dispatch('setLoading', {loadingText: `Deleting branch ${branch}…`, isLoading: false});
     }
 
-    const merge = async(branch) => {
-      if(branch !== "main") {
+    const merge = async (branch) => {
+      if (branch !== "main") {
         await router.push({name: 'Merge', params: {branch: branch}})
       }
     }
+
+    const selectBranch = async (branch) => {
+      await store.dispatch('setBranch', branch);
+    }
+
+    const mergeIcon = require("@/assets/img/icons/merge.png")
+
+    const formatDate = (date) => new Date(date).toLocaleString()
 
     return {
       branches,
       onDelete,
       merge,
+      mergeIcon,
+      selectedBranch,
+      selectBranch,
+      formatDate,
     }
   }
 }
@@ -86,6 +114,7 @@ export default {
 .branch {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   background-color: white;
   /*box-shadow: rgba(0, 0, 0, 0.04) 0 3px 5px;*/
   border-radius: 32px;
@@ -94,11 +123,7 @@ export default {
   transition: box-shadow 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.branch:not(.main) {
-  cursor: pointer;
-}
-
-.branch:not(.main):hover {
+.branch:hover {
   box-shadow: rgba(0, 0, 0, 0.08) 0 3px 5px;
   border-color: var(--primary);
   color: var(--primary);
@@ -108,8 +133,12 @@ export default {
   color: #c93b3b;
   background-color: #f1f1f1;
   border-radius: 16px;
-  padding: 0 8px;
-  margin-left: 8px;
+  width: 24px;
+  height: 24px;
+  font-size: 20px;
+  padding: 4px;
+  text-align: center;
+  line-height: 24px;
 }
 
 .delete:hover {
@@ -124,5 +153,45 @@ export default {
 
 .actions {
   display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: 4px;
+}
+
+.info {
+  display: flex;
+  align-items: center;
+}
+
+.selected {
+  font-size: 16px;
+  text-transform: uppercase;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.merge-icon {
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  padding: 6px;
+  background-color: #f1f1f1;
+  border-radius: 16px;
+  vertical-align: middle;
+}
+
+.merge-icon:hover {
+  background-color: #cde2ff;
+}
+
+.last-update {
+  color: black !important;
+  font-size: 15px;
+  margin-right: 8px;
+}
+
+.branch-name-selected {
+  display: flex;
+  gap: 8px;
 }
 </style>

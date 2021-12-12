@@ -121,7 +121,7 @@ button.primary:hover, input[type=button].primary:hover, input[type=submit].prima
   line-height: 1.4;
 }
 
-h1, h2, h3, h4, h5, p, ul, ol, blockquote, figure, button, body {
+* {
   margin: 0;
   padding: 0;
 }

@@ -15,7 +15,6 @@
       </li>
     </ul>
     <ul>
-      <li><a>Help</a></li>
       <li v-if="branch == null && token == null">
         <button class="primary-outline" @click="isEditVisible = !isEditVisible" id="edit-button">
           Edit
@@ -23,7 +22,7 @@
       </li>
       <li id="editing-mode" v-if="branch != null || token != null">
         <div id="editing-mode-container">
-          <div class="title">{{ branch != null ? "Editing mode" : "Curator mode" }}</div>
+          <div class="title">{{ token == null ? "Editing mode" : "Curator mode" }}</div>
           <div class="branch" v-if="branch != null">{{ branch }}</div>
         </div>
         <div id="edit-buttons">
@@ -112,6 +111,7 @@ export default {
           const token = response.data;
           console.log(token);
           await store.dispatch("setToken", token);
+          await store.dispatch("setBranch", "main");
           isEditVisible.value = false;
         } catch (e) {
           console.log(e.response);
