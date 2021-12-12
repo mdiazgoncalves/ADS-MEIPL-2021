@@ -654,7 +654,7 @@ public class Services {
 			description = "Branch não existe",
 			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response syncBranch(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException, BranchAlreadyExistsException {
+	public Response syncBranch(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException {
 		GithubOperations.syncBranch(branch);
 		return Response.ok().build();
 	}

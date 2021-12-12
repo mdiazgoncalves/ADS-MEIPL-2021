@@ -115,6 +115,15 @@ public class GithubOperations extends GithubOperationsBase {
 		return res;
 	}
 	
+	private static String getOWLSha(String branch) throws IOException {
+		GHTree tree = getGHRepository().getTree(branch);
+		GHBlob owlBlob = null;
+		for(GHTreeEntry entry : tree.getTree())
+			if(entry.getPath().equals(owlPath))
+				owlBlob = entry.asBlob();
+		return owlBlob.getSha();
+	}
+	
 	private static class GetOWLResponse {
 		public String sha;
 		public String owl;
@@ -159,44 +168,46 @@ public class GithubOperations extends GithubOperationsBase {
 
 		lockBranch(branch);
 		try {
-			String latestCommitInMain = getLatestCommit(getGHRepository().getDefaultBranch());
-
-			// não encontrei forma de criar branch com a biblioteca java
-			// portanto vamos usar aqui a API REST diretamente
-			
-			String authorizationHeader = "Bearer " + getGithubAccessToken();
-			
-			JsonObject bodyObject = new JsonObject();
-			bodyObject.addProperty("ref", "refs/heads/" + branch);
-			bodyObject.addProperty("sha", latestCommitInMain);
-			String body = bodyObject.toString();
-			
-			RequestBody requestBody = RequestBody.create(body, MediaType.parse("application/json"));
-			Request request = new Request.Builder()
-					.url("https://api.github.com/repos/ads-meipl/knowledge-base/git/refs")
-					.addHeader("Authorization", authorizationHeader)
-					.post(requestBody)
-					.build();
-			Call call = client.newCall(request);
-			Response response = call.execute();
-			
-			if(response.code() == 422) {
-				JsonObject responseObject = JsonParser.parseString(response.body().string()).getAsJsonObject();
-				String message = responseObject.get("message").getAsString();
-				if(message.contains("is not a valid ref name")) {
-					throw new InvalidBranchException();
-				} else if(message.contains("Reference already exists")) {
-					throw new BranchAlreadyExistsException();
-				} else {
-					throw new RuntimeException(message);
-				}
-			}
+			createBranchImpl(branch);
 		} catch(BranchNotFoundException e) {
 			throw new RuntimeException(e);
 		} finally {
 			unlockBranch(branch);
 		}
 		
+	}
+	
+	// método sem lock; necessário fazer lock antes de chamar este método
+	private static void createBranchImpl(String branch) throws IOException, BranchNotFoundException, InvalidBranchException, BranchAlreadyExistsException {
+		String latestCommitInMain = getLatestCommit(getGHRepository().getDefaultBranch());
+		
+		String authorizationHeader = "Bearer " + getGithubAccessToken();
+		
+		JsonObject bodyObject = new JsonObject();
+		bodyObject.addProperty("ref", "refs/heads/" + branch);
+		bodyObject.addProperty("sha", latestCommitInMain);
+		String body = bodyObject.toString();
+		
+		RequestBody requestBody = RequestBody.create(body, MediaType.parse("application/json"));
+		Request request = new Request.Builder()
+				.url("https://api.github.com/repos/ads-meipl/knowledge-base/git/refs")
+				.addHeader("Authorization", authorizationHeader)
+				.post(requestBody)
+				.build();
+		Call call = client.newCall(request);
+		Response response = call.execute();
+		
+		if(response.code() == 422) {
+			JsonObject responseObject = JsonParser.parseString(response.body().string()).getAsJsonObject();
+			String message = responseObject.get("message").getAsString();
+			if(message.contains("is not a valid ref name")) {
+				throw new InvalidBranchException();
+			} else if(message.contains("Reference already exists")) {
+				throw new BranchAlreadyExistsException();
+			} else {
+				throw new RuntimeException(message);
+			}
+		}
 	}
 
 	public static String getDefaultBranch() {
@@ -221,7 +232,11 @@ public class GithubOperations extends GithubOperationsBase {
 	
 	public static void deleteBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException {
 		checkIsLatestCommit(branchName, commit);
-		
+		deleteBranchImpl(branchName);
+	}
+	
+	// método sem lock; necessário fazer lock antes de chamar este método
+	private static void deleteBranchImpl(String branchName) throws IOException {
 		String authorizationHeader = "Bearer " + getGithubAccessToken();
 		Request request = new Request.Builder()
 				.url("https://api.github.com/repos/ads-meipl/knowledge-base/git/refs/heads/" + branchName)
@@ -237,13 +252,13 @@ public class GithubOperations extends GithubOperationsBase {
 		try {
 			checkIsLatestCommit(branchName, commit);
 			
-			GetOWLResponse getOWLResponse = getOWL(getDefaultBranch());
+			String owlSha = getOWLSha(getDefaultBranch());
 			getGHRepository().createContent()
 					.branch(getDefaultBranch())
 					.path(owlPath)
 					.content(owl)
 					.message("Merge branch " + branchName)
-					.sha(getOWLResponse.sha)
+					.sha(owlSha)
 					.commit();
 			deleteBranch(branchName, commit);
 		} finally {
@@ -255,9 +270,16 @@ public class GithubOperations extends GithubOperationsBase {
 		return getOWL(branchName).owl;
 	}
 	
-	public static void syncBranch(String branchName) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException, BranchAlreadyExistsException {
-		String commit = getLatestCommit(branchName);
-		deleteBranch(branchName, commit);
-		createBranch(branchName);
+	public static void syncBranch(String branchName) throws IOException, BranchNotFoundException {
+		lockBranch(branchName);
+		try {
+			deleteBranchImpl(branchName);
+			createBranchImpl(branchName);
+		} catch(BranchAlreadyExistsException | InvalidBranchException e) {
+			// não é suposto ser possível chegar a este ponto
+			throw new RuntimeException(e);
+		} finally {
+			unlockBranch(branchName);
+		}
 	}
 }
