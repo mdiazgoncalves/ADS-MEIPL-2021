@@ -486,7 +486,7 @@ public class Services {
 	@GET
 	@Operation(tags = {"Versionamento"},
 		summary = "Lista os branches",
-		description = "Retorna uma lista dos branches existentes",
+		description = "Retorna uma lista dos branches existentes, assim como a data do último commit para cada branch",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
 				content = @Content(array = @ArraySchema(schema = @Schema(implementation = BranchResponseModel.class)))),
