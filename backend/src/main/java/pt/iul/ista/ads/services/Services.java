@@ -512,13 +512,16 @@ public class Services {
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
+				@ApiResponse(responseCode = "400",
+				description = "Branch inválido",
+				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Branch inexistente",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response mergeBranch(@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException {
+			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException, InvalidBranchException {
 		Authorization.checkValidToken(token);
 		GithubOperations.mergeBranch(branch, commit);
 		return Response.ok().build();
@@ -537,13 +540,16 @@ public class Services {
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
+				@ApiResponse(responseCode = "400",
+				description = "Branch inválido",
+				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Branch inexistente",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response deleteBranch(@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException {
+			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException, InvalidBranchException {
 		Authorization.checkValidToken(token);
 		GithubOperations.deleteBranch(branch, commit);
 		return Response.ok().build();
@@ -583,7 +589,7 @@ public class Services {
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "400",
-				description = "OWL inválido",
+				description = "OWL inválido ou branch inválido",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Branch inexistente",
@@ -593,7 +599,7 @@ public class Services {
 	public Response mergeBranchOwl(@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch,
-			@Parameter(description = "OWL a substituir a versão existente") String body) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException {
+			@Parameter(description = "OWL a substituir a versão existente") String body) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException, InvalidBranchException {
 		Authorization.checkValidToken(token);
 		try {
 			GithubOperations.mergeBranchOwl(branch, commit, body);
@@ -658,11 +664,14 @@ public class Services {
 	description = "Descarta alterações no branch (se existirem) e sincroniza o branch com o main",
 	responses = {@ApiResponse(responseCode = "200",
 			description = "OK"),
+			@ApiResponse(responseCode = "400",
+			description = "Branch inválido",
+			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 			@ApiResponse(responseCode = "404",
 			description = "Branch não existe",
 			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response syncBranch(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException {
+	public Response syncBranch(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, InvalidBranchException {
 		GithubOperations.syncBranch(branch);
 		return Response.ok().build();
 	}
