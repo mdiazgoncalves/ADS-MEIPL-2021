@@ -1,15 +1,16 @@
 package pt.iul.ista.ads.github;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 import org.kohsuke.github.GHBlob;
 import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHContentUpdateResponse;
+import org.kohsuke.github.GHFileNotFoundException;
 import org.kohsuke.github.GHTree;
 import org.kohsuke.github.GHTreeEntry;
 
@@ -21,6 +22,7 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import pt.iul.ista.ads.models.BranchResponseModel;
 import pt.iul.ista.ads.owl.Ontology;
 import pt.iul.ista.ads.owl.OntologyException;
 
@@ -31,14 +33,12 @@ public class GithubOperations extends GithubOperationsBase {
 	private static final String owlPath = "knowledge-base.owl";
 	
 	// retorna hash do commit efetuado
-	public static String editOntology(String branch, String commit, OntologyEditorCallback callback) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		// check if branch is valid
-		if(!isValidBranch(branch))
+	public static String editOntology(String branch, String commit, boolean isCurator, OntologyEditorCallback callback) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
+		if(!isValidBranch(branch) && !isCurator)
 			throw new InvalidBranchException();
 		
 		lockBranch(branch);
 		try {
-			// check if commit is the latest commit
 			checkIsLatestCommit(branch, commit);
 
 			GetOWLResponse getOWLResponse = getOWL(branch);
@@ -142,6 +142,10 @@ public class GithubOperations extends GithubOperationsBase {
 		// versão original deste método, usando a biblioteca java:
 		//return repository.getCommit(branch).getSHA1();
 		// por vezes não funciona como desejado, por isso vamos usar a api REST diretamente
+		return getLatestCommitObject(branch).get("sha").getAsString();
+	}
+	
+	private static JsonObject getLatestCommitObject(String branch) throws BranchNotFoundException, IOException {
 		String authorizationHeader = "Bearer " + getGithubAccessToken();
 
 		Request request = new Request.Builder()
@@ -155,7 +159,7 @@ public class GithubOperations extends GithubOperationsBase {
 			throw new BranchNotFoundException(branch);
 		
 		JsonObject responseObject = JsonParser.parseString(response.body().string()).getAsJsonObject();
-		return responseObject.get("sha").getAsString();
+		return responseObject;
 	}
 	
 	public static boolean isValidBranch(String branch) {
@@ -163,8 +167,7 @@ public class GithubOperations extends GithubOperationsBase {
 	}
 
 	public static void createBranch(String branch) throws InvalidBranchException, IOException, BranchAlreadyExistsException {
-		if(!isValidBranch(branch))
-			throw new InvalidBranchException();
+		checkIsValidBranch(branch);
 
 		lockBranch(branch);
 		try {
@@ -214,11 +217,27 @@ public class GithubOperations extends GithubOperationsBase {
 		return getGHRepository().getDefaultBranch();
 	}
 	
-	public static List<String> listBranches() throws IOException {
-		return getGHRepository().getBranches().keySet().stream().collect(Collectors.toList());
+	public static List<BranchResponseModel> listBranches() throws IOException {
+		List<BranchResponseModel> res = new ArrayList<BranchResponseModel>();
+		try {
+			for(String branchName : getGHRepository().getBranches().keySet()) {
+				String date = getLatestCommitObject(branchName)
+						.get("commit").getAsJsonObject()
+						.get("author").getAsJsonObject()
+						.get("date").getAsString();
+				BranchResponseModel branchModel = new BranchResponseModel();
+				branchModel.setBranchName(branchName);
+				branchModel.setLastCommitDate(date);
+				res.add(branchModel);
+			}
+		} catch(BranchNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		return res;
 	}
 	
-	public static void mergeBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException {
+	public static void mergeBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException {
+		checkIsValidBranch(branchName);
 		lockBranch(branchName);
 		try {
 			checkIsLatestCommit(branchName, commit);
@@ -230,13 +249,24 @@ public class GithubOperations extends GithubOperationsBase {
 		}
 	}
 	
-	public static void deleteBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException {
-		checkIsLatestCommit(branchName, commit);
-		deleteBranchImpl(branchName);
+	private static void checkIsValidBranch(String branch) throws InvalidBranchException {
+		if(!isValidBranch(branch))
+			throw new InvalidBranchException();
+	}
+	
+	public static void deleteBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException {
+		checkIsValidBranch(branchName);
+		lockBranch(branchName);
+		try {
+			checkIsLatestCommit(branchName, commit);
+			deleteBranchImpl(branchName);
+		} finally {
+			unlockBranch(branchName);
+		}
 	}
 	
 	// método sem lock; necessário fazer lock antes de chamar este método
-	private static void deleteBranchImpl(String branchName) throws IOException {
+	private static void deleteBranchImpl(String branchName) throws IOException {		
 		String authorizationHeader = "Bearer " + getGithubAccessToken();
 		Request request = new Request.Builder()
 				.url("https://api.github.com/repos/ads-meipl/knowledge-base/git/refs/heads/" + branchName)
@@ -247,10 +277,14 @@ public class GithubOperations extends GithubOperationsBase {
 		call.execute();
 	}
 	
-	public static void mergeBranchOwl(String branchName, String commit, String owl) throws IOException, BranchNotFoundException, OldCommitException {
+	public static void mergeBranchOwl(String branchName, String commit, String owl) throws IOException, BranchNotFoundException, OldCommitException, OntologyException, InvalidBranchException {
+		checkIsValidBranch(branchName);
 		lockBranch(branchName);
 		try {
 			checkIsLatestCommit(branchName, commit);
+			
+			// lança OntologyException se owl é inválido
+			new Ontology(owl);
 			
 			String owlSha = getOWLSha(getDefaultBranch());
 			getGHRepository().createContent()
@@ -260,22 +294,27 @@ public class GithubOperations extends GithubOperationsBase {
 					.message("Merge branch " + branchName)
 					.sha(owlSha)
 					.commit();
-			deleteBranch(branchName, commit);
+			deleteBranchImpl(branchName);
 		} finally {
 			unlockBranch(branchName);
 		}
 	}
 	
-	public static String getBranchOwl(String branchName) throws IOException {
-		return getOWL(branchName).owl;
+	public static String getBranchOwl(String branchName) throws IOException, BranchNotFoundException {
+		try {
+			return getOWL(branchName).owl;
+		} catch(GHFileNotFoundException e) {
+			throw new BranchNotFoundException(branchName);
+		}
 	}
 	
-	public static void syncBranch(String branchName) throws IOException, BranchNotFoundException {
+	public static void syncBranch(String branchName) throws IOException, BranchNotFoundException, InvalidBranchException {
+		checkIsValidBranch(branchName);
 		lockBranch(branchName);
 		try {
 			deleteBranchImpl(branchName);
 			createBranchImpl(branchName);
-		} catch(BranchAlreadyExistsException | InvalidBranchException e) {
+		} catch(BranchAlreadyExistsException e) {
 			// não é suposto ser possível chegar a este ponto
 			throw new RuntimeException(e);
 		} finally {

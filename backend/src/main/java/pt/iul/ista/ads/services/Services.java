@@ -28,6 +28,7 @@ import pt.iul.ista.ads.github.GithubOperations;
 import pt.iul.ista.ads.github.GithubOperations.ReadOntologyResponse;
 import pt.iul.ista.ads.github.InvalidBranchException;
 import pt.iul.ista.ads.github.OldCommitException;
+import pt.iul.ista.ads.github.OntologyEditorCallback;
 import pt.iul.ista.ads.models.*;
 import pt.iul.ista.ads.owl.Ontology;
 import pt.iul.ista.ads.owl.OntologyException;
@@ -130,9 +131,10 @@ public class Services {
 	@Consumes("application/json")
 	public Response createClass(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
+			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className,
 			@Parameter(description = "Detalhes da nova classe", required = true) ClassCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.addClass(className, body.getSuperClassName());
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -161,9 +163,10 @@ public class Services {
 	@Consumes("application/json")
 	public Response alterClass(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
+			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className,
 			@Parameter(description = "Alterações a fazer à classe", required = true) ClassAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.alterClass(className, body.getNewClassName(), body.getNewSuperClass());
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -188,10 +191,11 @@ public class Services {
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response deleteClass(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
+			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		
-		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.deleteClass(className);
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -260,9 +264,10 @@ public class Services {
 	@Consumes("application/json")
 	public Response createRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
+			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName,
 			@Parameter(description = "Detalhes da nova relação", required = true) RelationshipCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.createRelationship(relationshipName, body.getClassName1(), body.getClassName2());
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -289,9 +294,10 @@ public class Services {
 	@Consumes("application/json")
 	public Response alterRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
+			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName,
 			@Parameter(description = "Alterações a fazer à relação", required = true) RelationshipAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.alterRelationship(relationshipName, body.getNewRelationshipName(), body.getClassName1(), body.getClassName2());
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -317,8 +323,9 @@ public class Services {
 	@Produces("application/json")
 	public Response deleteRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
+			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.deleteRelationship(relationshipName);
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -386,9 +393,10 @@ public class Services {
 	@Consumes("application/json")
 	public Response createIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
+			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName,
 			@Parameter(description = "Detalhes do novo indivíduo", required = true) IndividualCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.createIndividual(individualName, body.getClassName(), body.getRelationships());
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -416,9 +424,10 @@ public class Services {
 	@Consumes("application/json")
 	public Response alterIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
+			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName,
 			@Parameter(description = "Alterações a fazer ao indivíduo", required = true) IndividualAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.alterIndividual(individualName, body.getNewIndividualName(), body.getClassName(), body.getRelationships());
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -443,9 +452,10 @@ public class Services {
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response deleteIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
+			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.deleteIndividual(individualName);
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -486,10 +496,10 @@ public class Services {
 	@GET
 	@Operation(tags = {"Versionamento"},
 		summary = "Lista os branches",
-		description = "Retorna uma lista dos branches existentes",
+		description = "Retorna uma lista dos branches existentes, assim como a data do último commit para cada branch",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class)))),
+				content = @Content(array = @ArraySchema(schema = @Schema(implementation = BranchResponseModel.class)))),
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
@@ -512,13 +522,16 @@ public class Services {
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
+				@ApiResponse(responseCode = "400",
+				description = "Branch inválido",
+				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Branch inexistente",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response mergeBranch(@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException {
+			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException, InvalidBranchException {
 		Authorization.checkValidToken(token);
 		GithubOperations.mergeBranch(branch, commit);
 		return Response.ok().build();
@@ -537,13 +550,16 @@ public class Services {
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
+				@ApiResponse(responseCode = "400",
+				description = "Branch inválido",
+				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Branch inexistente",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response deleteBranch(@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException {
+			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException, InvalidBranchException {
 		Authorization.checkValidToken(token);
 		GithubOperations.deleteBranch(branch, commit);
 		return Response.ok().build();
@@ -564,7 +580,7 @@ public class Services {
 			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/xml")
 	public Response getBranchOwl(@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, UnauthorizedException {
+			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, UnauthorizedException, BranchNotFoundException {
 		Authorization.checkValidToken(token);
 		return Response.ok(GithubOperations.getBranchOwl(branch)).build();
 	}
@@ -582,16 +598,24 @@ public class Services {
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
+				@ApiResponse(responseCode = "400",
+				description = "OWL inválido ou branch inválido",
+				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Branch inexistente",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Consumes("application/xml")
+	@Produces("application/json")
 	public Response mergeBranchOwl(@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch,
-			@Parameter(description = "OWL a substituir a versão existente") String body) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException {
+			@Parameter(description = "OWL a substituir a versão existente") String body) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException, InvalidBranchException {
 		Authorization.checkValidToken(token);
-		GithubOperations.mergeBranchOwl(branch, commit, body);
+		try {
+			GithubOperations.mergeBranchOwl(branch, commit, body);
+		} catch(OntologyException e) {
+			return Response.status(400).entity(new ErrorResponseModel("invalid owl")).build();
+		}
 		return Response.ok().build();
 	}
 	
@@ -650,14 +674,24 @@ public class Services {
 	description = "Descarta alterações no branch (se existirem) e sincroniza o branch com o main",
 	responses = {@ApiResponse(responseCode = "200",
 			description = "OK"),
+			@ApiResponse(responseCode = "400",
+			description = "Branch inválido",
+			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 			@ApiResponse(responseCode = "404",
 			description = "Branch não existe",
 			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response syncBranch(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException {
+	public Response syncBranch(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, InvalidBranchException {
 		GithubOperations.syncBranch(branch);
 		return Response.ok().build();
 	}
 	
 	
+	// **************************************************
+	// Métodos auxiliares
+	// **************************************************
+	
+	private String editOntology(String branch, String commit, String token, OntologyEditorCallback callback) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
+		return GithubOperations.editOntology(branch, commit, Authorization.isValidToken(token), callback);
+	}
 }

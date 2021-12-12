@@ -12,7 +12,7 @@ public class BranchNotFoundExceptionMapper implements ExceptionMapper<BranchNotF
 
 	@Override
 	public Response toResponse(BranchNotFoundException exception) {
-		return Response.status(404).entity(new ErrorResponseModel(exception.getMessage())).build();
+		return Response.status(404).type("application/json").entity(new ErrorResponseModel(exception.getMessage())).build();
 	}
 
 }
