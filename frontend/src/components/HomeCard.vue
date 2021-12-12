@@ -1,11 +1,11 @@
 <template>
   <div class="card">
-    <a :href="href">
+    <router-link :to="href">
       <header>
         <img :src="src" :alt="alt">
       </header>
       <h2>{{ title }}</h2>
-    </a>
+    </router-link>
   </div>
 </template>
 
