@@ -32,13 +32,10 @@ public class GithubOperations extends GithubOperationsBase {
 	
 	// retorna hash do commit efetuado
 	public static String editOntology(String branch, String commit, OntologyEditorCallback callback) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		// check if branch is valid
-		if(!isValidBranch(branch))
-			throw new InvalidBranchException();
+		checkIsValidBranch(branch);
 		
 		lockBranch(branch);
 		try {
-			// check if commit is the latest commit
 			checkIsLatestCommit(branch, commit);
 
 			GetOWLResponse getOWLResponse = getOWL(branch);
@@ -163,8 +160,7 @@ public class GithubOperations extends GithubOperationsBase {
 	}
 
 	public static void createBranch(String branch) throws InvalidBranchException, IOException, BranchAlreadyExistsException {
-		if(!isValidBranch(branch))
-			throw new InvalidBranchException();
+		checkIsValidBranch(branch);
 
 		lockBranch(branch);
 		try {
@@ -218,7 +214,8 @@ public class GithubOperations extends GithubOperationsBase {
 		return getGHRepository().getBranches().keySet().stream().collect(Collectors.toList());
 	}
 	
-	public static void mergeBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException {
+	public static void mergeBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException {
+		checkIsValidBranch(branchName);
 		lockBranch(branchName);
 		try {
 			checkIsLatestCommit(branchName, commit);
@@ -230,13 +227,24 @@ public class GithubOperations extends GithubOperationsBase {
 		}
 	}
 	
-	public static void deleteBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException {
-		checkIsLatestCommit(branchName, commit);
-		deleteBranchImpl(branchName);
+	private static void checkIsValidBranch(String branch) throws InvalidBranchException {
+		if(!isValidBranch(branch))
+			throw new InvalidBranchException();
+	}
+	
+	public static void deleteBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException {
+		checkIsValidBranch(branchName);
+		lockBranch(branchName);
+		try {
+			checkIsLatestCommit(branchName, commit);
+			deleteBranchImpl(branchName);
+		} finally {
+			unlockBranch(branchName);
+		}
 	}
 	
 	// método sem lock; necessário fazer lock antes de chamar este método
-	private static void deleteBranchImpl(String branchName) throws IOException {
+	private static void deleteBranchImpl(String branchName) throws IOException {		
 		String authorizationHeader = "Bearer " + getGithubAccessToken();
 		Request request = new Request.Builder()
 				.url("https://api.github.com/repos/ads-meipl/knowledge-base/git/refs/heads/" + branchName)
@@ -247,10 +255,14 @@ public class GithubOperations extends GithubOperationsBase {
 		call.execute();
 	}
 	
-	public static void mergeBranchOwl(String branchName, String commit, String owl) throws IOException, BranchNotFoundException, OldCommitException {
+	public static void mergeBranchOwl(String branchName, String commit, String owl) throws IOException, BranchNotFoundException, OldCommitException, OntologyException, InvalidBranchException {
+		checkIsValidBranch(branchName);
 		lockBranch(branchName);
 		try {
 			checkIsLatestCommit(branchName, commit);
+			
+			// lança OntologyException se owl é inválido
+			new Ontology(owl);
 			
 			String owlSha = getOWLSha(getDefaultBranch());
 			getGHRepository().createContent()
@@ -260,7 +272,7 @@ public class GithubOperations extends GithubOperationsBase {
 					.message("Merge branch " + branchName)
 					.sha(owlSha)
 					.commit();
-			deleteBranch(branchName, commit);
+			deleteBranchImpl(branchName);
 		} finally {
 			unlockBranch(branchName);
 		}
@@ -270,12 +282,13 @@ public class GithubOperations extends GithubOperationsBase {
 		return getOWL(branchName).owl;
 	}
 	
-	public static void syncBranch(String branchName) throws IOException, BranchNotFoundException {
+	public static void syncBranch(String branchName) throws IOException, BranchNotFoundException, InvalidBranchException {
+		checkIsValidBranch(branchName);
 		lockBranch(branchName);
 		try {
 			deleteBranchImpl(branchName);
 			createBranchImpl(branchName);
-		} catch(BranchAlreadyExistsException | InvalidBranchException e) {
+		} catch(BranchAlreadyExistsException e) {
 			// não é suposto ser possível chegar a este ponto
 			throw new RuntimeException(e);
 		} finally {

@@ -582,16 +582,24 @@ public class Services {
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
+				@ApiResponse(responseCode = "400",
+				description = "OWL inválido",
+				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
 				@ApiResponse(responseCode = "404",
 				description = "Branch inexistente",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Consumes("application/xml")
+	@Produces("application/json")
 	public Response mergeBranchOwl(@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
 			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch,
 			@Parameter(description = "OWL a substituir a versão existente") String body) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException {
 		Authorization.checkValidToken(token);
-		GithubOperations.mergeBranchOwl(branch, commit, body);
+		try {
+			GithubOperations.mergeBranchOwl(branch, commit, body);
+		} catch(OntologyException e) {
+			return Response.status(400).entity(new ErrorResponseModel("invalid owl")).build();
+		}
 		return Response.ok().build();
 	}
 	
