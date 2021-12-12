@@ -46,9 +46,15 @@ public class Authorization {
 	}
 	
 	public static void checkValidToken(String token) throws UnauthorizedException {
-		JWT jwt = JWT.getDecoder().decode(token, verifier);
-		if(!jwt.issuer.equals(curatorIssuer) || jwt.isExpired())
+		if(!isValidToken(token))
 			throw new UnauthorizedException();
 	}
 
+	public static boolean isValidToken(String token) {
+		if(token == null)
+			return false;
+		JWT jwt = JWT.getDecoder().decode(token, verifier);
+		return jwt.issuer.equals(curatorIssuer) && !jwt.isExpired();
+			
+	}
 }

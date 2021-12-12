@@ -33,8 +33,9 @@ public class GithubOperations extends GithubOperationsBase {
 	private static final String owlPath = "knowledge-base.owl";
 	
 	// retorna hash do commit efetuado
-	public static String editOntology(String branch, String commit, OntologyEditorCallback callback) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		checkIsValidBranch(branch);
+	public static String editOntology(String branch, String commit, boolean isCurator, OntologyEditorCallback callback) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
+		if(!isValidBranch(branch) && !isCurator)
+			throw new InvalidBranchException();
 		
 		lockBranch(branch);
 		try {
