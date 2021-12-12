@@ -16,26 +16,21 @@
     </ul>
     <ul>
       <li><a>Help</a></li>
-      <li v-if="branch == null">
+      <li v-if="branch == null && token == null">
         <button class="primary-outline" @click="isEditVisible = !isEditVisible" id="edit-button">
           Edit
         </button>
       </li>
-      <template v-if="branch != null">
-        <li id="editing-mode">
-          <div id="editing-mode-container">
-            <div class="title">Editing mode</div>
-            <div class="branch">{{ branch }}</div>
-          </div>
-          <div id="edit-buttons">
-            <button class="primary-outline reject" @click="reject()">
-              &cross;
-            </button>
-          </div>
-        </li>
-      </template>
-      <li v-if="token != null">
-        Welcome, Curator
+      <li id="editing-mode" v-if="branch != null || token != null">
+        <div id="editing-mode-container">
+          <div class="title">{{ branch != null ? "Editing mode" : "Curator mode" }}</div>
+          <div class="branch" v-if="branch != null">{{ branch }}</div>
+        </div>
+        <div id="edit-buttons">
+          <button class="primary-outline reject" @click="reject()">
+            &cross;
+          </button>
+        </div>
       </li>
     </ul>
     <div id="edit-container" v-if="isEditVisible">
@@ -132,6 +127,7 @@ export default {
 
     const reject = async () => {
       await store.dispatch("setBranch", null);
+      await store.dispatch("setToken", null);
     }
 
     return {

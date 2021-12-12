@@ -25,7 +25,7 @@
 import {computed} from "vue";
 import {useStore} from "vuex";
 import NavBar from "@/components/NavBar";
-import {useRoute} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 
 export default {
   name: 'App',
@@ -33,6 +33,23 @@ export default {
   setup() {
     const store = useStore()
     const route = useRoute()
+    const router = useRouter()
+
+    router.beforeEach((to, from, next) => {
+      if (to.name === "Merge") {
+        to.meta.breadcrumbs = [
+          {
+            name: "Branches",
+            href: "/branches"
+          },
+          {
+            name: to.params.branch,
+            href: `/branches/merge/${to.params.branch}`
+          },
+        ]
+      }
+      next()
+    })
 
     return {
       isLoading: computed(() => store.getters.isLoading),
@@ -107,6 +124,12 @@ button.primary:hover, input[type=button].primary:hover, input[type=submit].prima
 h1, h2, h3, h4, h5, p, ul, ol, blockquote, figure, button, body {
   margin: 0;
   padding: 0;
+}
+
+textarea {
+  line-height: 1.4;
+  font-size: 13px;
+  resize: none;
 }
 
 a {
@@ -215,5 +238,6 @@ header {
 
 main {
   margin-top: 32px;
+  margin-bottom: 32px;
 }
 </style>

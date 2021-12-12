@@ -4,7 +4,7 @@
 
 <script>
 import ClassCardsGrid from "@/components/ClassCardsGrid";
-import {inject, onMounted, ref, watch} from "vue";
+import {inject, onActivated, ref, watch} from "vue";
 import {useStore} from "vuex";
 
 export default {
@@ -33,11 +33,10 @@ export default {
           })
         }
       }
-      await store.dispatch('setLoading', false);
       await store.dispatch('setLoading', {loadingText: "Loading classes…", isLoading: false});
     }
 
-    onMounted(async () => await fetchClasses(store.getters.branch))
+    onActivated(async () => await fetchClasses(store.getters.branch))
 
     watch(() => store.getters.branch, async (branch) => {
       await fetchClasses(branch);
