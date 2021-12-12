@@ -59,6 +59,11 @@
             <version>${jetty.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlets</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
@@ -99,8 +104,25 @@
         <dependency>
             <groupId>net.sourceforge.owlapi</groupId>
             <artifactId>owlapi-distribution</artifactId>
-            <version>5.1.19</version>
+            <version>4.5.20</version>
         </dependency>
+        
+        <dependency>
+            <groupId>edu.stanford.swrl</groupId>
+            <artifactId>swrlapi</artifactId>
+            <version>2.0.11</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.stanford.swrl</groupId>
+            <artifactId>swrlapi-drools-engine</artifactId>
+            <version>2.0.11</version>
+        </dependency>
+        
+		<dependency>
+		    <groupId>com.squareup.okhttp3</groupId>
+		    <artifactId>okhttp</artifactId>
+		    <version>4.9.3</version>
+		</dependency>
         
     </dependencies>
 
@@ -113,8 +135,8 @@
                 <version>3.8.1</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <source>17</source>
-                    <target>17</target>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -152,9 +174,9 @@
     <properties>
         <jersey.version>2.34</jersey.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jetty.version>10.0.7</jetty.version>
+        <jetty.version>9.4.44.v20210927</jetty.version>
         <slf4j.version>1.7.32</slf4j.version>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
     </properties>
 </project>

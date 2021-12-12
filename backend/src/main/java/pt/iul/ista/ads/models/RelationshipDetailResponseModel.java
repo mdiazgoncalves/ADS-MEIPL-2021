@@ -1,6 +1,8 @@
 package pt.iul.ista.ads.models;
 
-public class RelationshipDetailResponseModel extends GetOperationBaseResponseModel<RelationshipDetailResponseModel.RelationshipModel>{
+import java.util.List;
+
+public class RelationshipDetailResponseModel extends GetOperationBaseResponseModel<List<RelationshipDetailResponseModel.RelationshipModel>> {
 
 	public static class RelationshipModel {
 		private String individual1;

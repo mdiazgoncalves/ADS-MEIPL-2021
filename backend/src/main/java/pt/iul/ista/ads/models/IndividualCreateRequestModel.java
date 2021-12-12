@@ -5,24 +5,7 @@ import java.util.List;
 public class IndividualCreateRequestModel {
 	
 	private String className;
-	private List<IndividualRelationships> relationships;
-	
-	static class IndividualRelationships {
-		private String relationshipName;
-		private String individual2;
-		public String getRelationshipName() {
-			return relationshipName;
-		}
-		public void setRelationshipName(String relationshipName) {
-			this.relationshipName = relationshipName;
-		}
-		public String getIndividual2() {
-			return individual2;
-		}
-		public void setIndividual2(String individual2) {
-			this.individual2 = individual2;
-		}
-	}
+	private List<IndividualRelationshipModel> relationships;
 
 	public String getClassName() {
 		return className;
@@ -32,11 +15,11 @@ public class IndividualCreateRequestModel {
 		this.className = className;
 	}
 
-	public List<IndividualRelationships> getRelationships() {
+	public List<IndividualRelationshipModel> getRelationships() {
 		return relationships;
 	}
 
-	public void setRelationships(List<IndividualRelationships> relationships) {
+	public void setRelationships(List<IndividualRelationshipModel> relationships) {
 		this.relationships = relationships;
 	}
 

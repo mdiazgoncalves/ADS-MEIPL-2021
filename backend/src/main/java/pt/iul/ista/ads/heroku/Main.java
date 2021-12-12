@@ -1,8 +1,14 @@
 package pt.iul.ista.ads.heroku;
 
+import java.util.EnumSet;
+
+import javax.servlet.DispatcherType;
+
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import io.swagger.v3.jaxrs2.integration.OpenApiServlet;
@@ -33,6 +39,10 @@ public class Main {
         ServletHolder swaggerServlet = context.addServlet(OpenApiServlet.class, "/swagger");
         swaggerServlet.setInitOrder(2);
 
+        FilterHolder filterHolder = context.addFilter(CrossOriginFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+        filterHolder.setInitParameter("allowedOrigins", "*");
+        filterHolder.setInitParameter("allowedMethods", "GET, HEAD, POST, PUT, OPTIONS, DELETE");
+        
         server.start();
         server.join();
     }
