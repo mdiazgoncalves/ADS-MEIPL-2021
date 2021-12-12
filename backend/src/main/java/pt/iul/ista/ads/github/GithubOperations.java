@@ -1,11 +1,11 @@
 package pt.iul.ista.ads.github;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 import org.kohsuke.github.GHBlob;
 import org.kohsuke.github.GHBranch;
@@ -21,6 +21,7 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import pt.iul.ista.ads.models.BranchResponseModel;
 import pt.iul.ista.ads.owl.Ontology;
 import pt.iul.ista.ads.owl.OntologyException;
 
@@ -139,6 +140,10 @@ public class GithubOperations extends GithubOperationsBase {
 		// versão original deste método, usando a biblioteca java:
 		//return repository.getCommit(branch).getSHA1();
 		// por vezes não funciona como desejado, por isso vamos usar a api REST diretamente
+		return getLatestCommitObject(branch).get("sha").getAsString();
+	}
+	
+	private static JsonObject getLatestCommitObject(String branch) throws BranchNotFoundException, IOException {
 		String authorizationHeader = "Bearer " + getGithubAccessToken();
 
 		Request request = new Request.Builder()
@@ -152,7 +157,7 @@ public class GithubOperations extends GithubOperationsBase {
 			throw new BranchNotFoundException(branch);
 		
 		JsonObject responseObject = JsonParser.parseString(response.body().string()).getAsJsonObject();
-		return responseObject.get("sha").getAsString();
+		return responseObject;
 	}
 	
 	public static boolean isValidBranch(String branch) {
@@ -210,8 +215,23 @@ public class GithubOperations extends GithubOperationsBase {
 		return getGHRepository().getDefaultBranch();
 	}
 	
-	public static List<String> listBranches() throws IOException {
-		return getGHRepository().getBranches().keySet().stream().collect(Collectors.toList());
+	public static List<BranchResponseModel> listBranches() throws IOException {
+		List<BranchResponseModel> res = new ArrayList<BranchResponseModel>();
+		try {
+			for(String branchName : getGHRepository().getBranches().keySet()) {
+				String date = getLatestCommitObject(branchName)
+						.get("commit").getAsJsonObject()
+						.get("author").getAsJsonObject()
+						.get("date").getAsString();
+				BranchResponseModel branchModel = new BranchResponseModel();
+				branchModel.setBranchName(branchName);
+				branchModel.setLastCommitDate(date);
+				res.add(branchModel);
+			}
+		} catch(BranchNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		return res;
 	}
 	
 	public static void mergeBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException {

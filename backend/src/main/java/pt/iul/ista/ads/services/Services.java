@@ -489,7 +489,7 @@ public class Services {
 		description = "Retorna uma lista dos branches existentes",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class)))),
+				content = @Content(array = @ArraySchema(schema = @Schema(implementation = BranchResponseModel.class)))),
 				@ApiResponse(responseCode = "401",
 				description = "Não autorizado",
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
