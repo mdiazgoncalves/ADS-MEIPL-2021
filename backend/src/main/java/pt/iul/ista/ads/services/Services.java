@@ -28,6 +28,7 @@ import pt.iul.ista.ads.github.GithubOperations;
 import pt.iul.ista.ads.github.GithubOperations.ReadOntologyResponse;
 import pt.iul.ista.ads.github.InvalidBranchException;
 import pt.iul.ista.ads.github.OldCommitException;
+import pt.iul.ista.ads.github.OntologyEditorCallback;
 import pt.iul.ista.ads.models.*;
 import pt.iul.ista.ads.owl.Ontology;
 import pt.iul.ista.ads.owl.OntologyException;
@@ -133,7 +134,7 @@ public class Services {
 			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className,
 			@Parameter(description = "Detalhes da nova classe", required = true) ClassCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, Authorization.isValidToken(token), (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.addClass(className, body.getSuperClassName());
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -165,7 +166,7 @@ public class Services {
 			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className,
 			@Parameter(description = "Alterações a fazer à classe", required = true) ClassAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, Authorization.isValidToken(token), (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.alterClass(className, body.getNewClassName(), body.getNewSuperClass());
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -194,7 +195,7 @@ public class Services {
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		
-		String newCommit = GithubOperations.editOntology(branch, commit, Authorization.isValidToken(token), (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.deleteClass(className);
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -266,7 +267,7 @@ public class Services {
 			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName,
 			@Parameter(description = "Detalhes da nova relação", required = true) RelationshipCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, Authorization.isValidToken(token), (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.createRelationship(relationshipName, body.getClassName1(), body.getClassName2());
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -296,7 +297,7 @@ public class Services {
 			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName,
 			@Parameter(description = "Alterações a fazer à relação", required = true) RelationshipAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, Authorization.isValidToken(token), (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.alterRelationship(relationshipName, body.getNewRelationshipName(), body.getClassName1(), body.getClassName2());
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -324,7 +325,7 @@ public class Services {
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, Authorization.isValidToken(token), (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.deleteRelationship(relationshipName);
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -395,7 +396,7 @@ public class Services {
 			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName,
 			@Parameter(description = "Detalhes do novo indivíduo", required = true) IndividualCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, Authorization.isValidToken(token), (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.createIndividual(individualName, body.getClassName(), body.getRelationships());
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -426,7 +427,7 @@ public class Services {
 			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName,
 			@Parameter(description = "Alterações a fazer ao indivíduo", required = true) IndividualAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, Authorization.isValidToken(token), (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.alterIndividual(individualName, body.getNewIndividualName(), body.getClassName(), body.getRelationships());
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -454,7 +455,7 @@ public class Services {
 			@Parameter(description = "Token do editor") @QueryParam("token") String token,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
-		String newCommit = GithubOperations.editOntology(branch, commit, Authorization.isValidToken(token), (ontology) -> {
+		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.deleteIndividual(individualName);
 		});
 		return Response.ok(new LatestCommitResponseModel(newCommit, branch)).build();
@@ -686,4 +687,11 @@ public class Services {
 	}
 	
 	
+	// **************************************************
+	// Métodos auxiliares
+	// **************************************************
+	
+	private String editOntology(String branch, String commit, String token, OntologyEditorCallback callback) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
+		return GithubOperations.editOntology(branch, commit, Authorization.isValidToken(token), callback);
+	}
 }
