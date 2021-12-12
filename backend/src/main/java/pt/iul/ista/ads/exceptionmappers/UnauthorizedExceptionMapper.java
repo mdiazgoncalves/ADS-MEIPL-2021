@@ -12,7 +12,7 @@ public class UnauthorizedExceptionMapper implements ExceptionMapper<Unauthorized
 
 	@Override
 	public Response toResponse(UnauthorizedException exception) {
-		return Response.status(401).entity(new ErrorResponseModel("unauthorized")).build();
+		return Response.status(401).type("application/json").entity(new ErrorResponseModel("unauthorized")).build();
 	}
 
 }

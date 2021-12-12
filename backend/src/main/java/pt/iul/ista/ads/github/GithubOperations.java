@@ -10,6 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.kohsuke.github.GHBlob;
 import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHContentUpdateResponse;
+import org.kohsuke.github.GHFileNotFoundException;
 import org.kohsuke.github.GHTree;
 import org.kohsuke.github.GHTreeEntry;
 
@@ -298,8 +299,12 @@ public class GithubOperations extends GithubOperationsBase {
 		}
 	}
 	
-	public static String getBranchOwl(String branchName) throws IOException {
-		return getOWL(branchName).owl;
+	public static String getBranchOwl(String branchName) throws IOException, BranchNotFoundException {
+		try {
+			return getOWL(branchName).owl;
+		} catch(GHFileNotFoundException e) {
+			throw new BranchNotFoundException(branchName);
+		}
 	}
 	
 	public static void syncBranch(String branchName) throws IOException, BranchNotFoundException, InvalidBranchException {

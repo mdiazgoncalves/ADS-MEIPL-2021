@@ -570,7 +570,7 @@ public class Services {
 			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/xml")
 	public Response getBranchOwl(@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, UnauthorizedException {
+			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, UnauthorizedException, BranchNotFoundException {
 		Authorization.checkValidToken(token);
 		return Response.ok(GithubOperations.getBranchOwl(branch)).build();
 	}
