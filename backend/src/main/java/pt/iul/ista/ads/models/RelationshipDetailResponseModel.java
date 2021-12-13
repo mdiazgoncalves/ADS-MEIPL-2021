@@ -2,9 +2,9 @@ package pt.iul.ista.ads.models;
 
 import java.util.List;
 
-public class RelationshipDetailResponseModel extends GetOperationBaseResponseModel<List<RelationshipDetailResponseModel.RelationshipModel>> {
+public class RelationshipDetailResponseModel extends GetOperationBaseResponseModel<List<RelationshipDetailResponseModel.RelationshipInstanceModel>> {
 
-	public static class RelationshipModel {
+	public static class RelationshipInstanceModel {
 		private String individual1;
 		private String individual2;
 		public String getIndividual1() {
