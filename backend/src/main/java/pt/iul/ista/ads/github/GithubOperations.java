@@ -248,6 +248,8 @@ public class GithubOperations extends GithubOperationsBase {
 		} catch(HttpException e) {
 			if(e.getResponseCode() == 409)
 				throw new MergeConflictException();
+			else
+				throw e;
 		} finally {
 			unlockBranch(branchName);
 		}
