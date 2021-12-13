@@ -13,6 +13,7 @@ import org.kohsuke.github.GHContentUpdateResponse;
 import org.kohsuke.github.GHFileNotFoundException;
 import org.kohsuke.github.GHTree;
 import org.kohsuke.github.GHTreeEntry;
+import org.kohsuke.github.HttpException;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -172,8 +173,6 @@ public class GithubOperations extends GithubOperationsBase {
 		lockBranch(branch);
 		try {
 			createBranchImpl(branch);
-		} catch(BranchNotFoundException e) {
-			throw new RuntimeException(e);
 		} finally {
 			unlockBranch(branch);
 		}
@@ -181,8 +180,14 @@ public class GithubOperations extends GithubOperationsBase {
 	}
 	
 	// método sem lock; necessário fazer lock antes de chamar este método
-	private static void createBranchImpl(String branch) throws IOException, BranchNotFoundException, InvalidBranchException, BranchAlreadyExistsException {
-		String latestCommitInMain = getLatestCommit(getGHRepository().getDefaultBranch());
+	private static void createBranchImpl(String branch) throws IOException, InvalidBranchException, BranchAlreadyExistsException {
+		String latestCommitInMain;
+		try {
+			latestCommitInMain = getLatestCommit(getGHRepository().getDefaultBranch());
+		} catch(BranchNotFoundException e) {
+			// não é suposto o fluxo chegar aqui
+			throw new RuntimeException(e);
+		}
 		
 		String authorizationHeader = "Bearer " + getGithubAccessToken();
 		
@@ -236,14 +241,19 @@ public class GithubOperations extends GithubOperationsBase {
 		return res;
 	}
 	
-	public static void mergeBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException {
+	public static void mergeBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException, MergeConflictException {
 		checkIsValidBranch(branchName);
 		lockBranch(branchName);
 		try {
 			checkIsLatestCommit(branchName, commit);
 			GHBranch branch = getGHRepository().getBranch(branchName);
 			getGHRepository().getBranch(getDefaultBranch()).merge(branch, "Merge branch " + branchName);
-			deleteBranch(branchName, commit);
+			deleteBranchImpl(branchName);
+		} catch(HttpException e) {
+			if(e.getResponseCode() == 409)
+				throw new MergeConflictException();
+			else
+				throw e;
 		} finally {
 			unlockBranch(branchName);
 		}
@@ -308,10 +318,12 @@ public class GithubOperations extends GithubOperationsBase {
 		}
 	}
 	
-	public static void syncBranch(String branchName) throws IOException, BranchNotFoundException, InvalidBranchException {
+	public static void syncBranch(String branchName, String commit) throws IOException, BranchNotFoundException, InvalidBranchException, OldCommitException {
 		checkIsValidBranch(branchName);
 		lockBranch(branchName);
 		try {
+			checkIsLatestCommit(branchName, commit);
+			
 			deleteBranchImpl(branchName);
 			createBranchImpl(branchName);
 		} catch(BranchAlreadyExistsException e) {

@@ -150,24 +150,26 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <includeScope>compile</includeScope>
+                            <outputDirectory>${project.build.directory}/dependency</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            <!-- <plugin>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-maven-plugin</artifactId>
-                <version>${jetty.version}</version>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
                 <configuration>
-                    <contextPath>/</contextPath>
-                    <webApp>
-                        <contextPath>/</contextPath>
-                        <webInfIncludeJarPattern>.*/.*jersey-[^/]\.jar$</webInfIncludeJarPattern>
-                    </webApp>
-                    <war>${project.build.directory}/${project.build.finalName}.war</war>
+                    <archive>
+                        <index>true</index>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>dependency/</classpathPrefix>
+                            <mainClass>pt.iul.ista.ads.heroku.Main</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
-            </plugin> -->
+            </plugin>
         </plugins>
     </build>
 
