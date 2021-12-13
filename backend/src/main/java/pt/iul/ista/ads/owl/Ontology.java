@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.AxiomType;
@@ -21,7 +20,6 @@ import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
-import org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -42,7 +40,7 @@ import org.swrlapi.sqwrl.values.SQWRLResultValue;
 
 import pt.iul.ista.ads.models.ClassDetailResponseModel;
 import pt.iul.ista.ads.models.ClassesResponseModel;
-import pt.iul.ista.ads.models.IndividualDetailResponseModel;
+import pt.iul.ista.ads.models.IndividualModel;
 import pt.iul.ista.ads.models.IndividualRelationshipModel;
 import pt.iul.ista.ads.models.RelationshipDetailResponseModel;
 import pt.iul.ista.ads.models.RelationshipsResponseModel;
@@ -291,15 +289,23 @@ public class Ontology {
 		manager.applyChanges(remover.getChanges());
 	}
 	
-	public List<String> listIndividuals() {
-		return ontology.getIndividualsInSignature().stream()
-				.map(individual -> owlEntityToString(individual))
-				.collect(Collectors.toList());
+	public List<IndividualModel> listIndividuals() {
+		List<IndividualModel> res = new ArrayList<IndividualModel>();
+		for(OWLNamedIndividual individual : ontology.getIndividualsInSignature()) {
+			try {
+				res.add(detailIndividual(owlEntityToString(individual)));
+			} catch (IndividualNotFoundOntologyException e) {
+				// não é suposto o fluxo entrar aqui
+				throw new RuntimeException(e);
+			}
+		}
+		return res;
 	}
 	
-	public IndividualDetailResponseModel.IndividualModel detailIndividual(String individualName) throws IndividualNotFoundOntologyException {
+	public IndividualModel detailIndividual(String individualName) throws IndividualNotFoundOntologyException {
 		checkIndividualExists(individualName);
-		IndividualDetailResponseModel.IndividualModel res = new IndividualDetailResponseModel.IndividualModel();
+		IndividualModel res = new IndividualModel();
+		res.setIndividualName(individualName);
 		OWLNamedIndividual individual = factory.getOWLNamedIndividual(":#" + individualName, prefixManager);
 		OWLClass cls = ontology.getClassAssertionAxioms(individual).iterator().next().getClassesInSignature().iterator().next();
 		res.setClassName(owlEntityToString(cls));
