@@ -5,6 +5,7 @@ import Branches from "@/views/Branches";
 import Merge from "@/views/Merge";
 import Relationships from "@/views/Relationships";
 import Individuals from "@/views/Individuals";
+import Queries from "@/views/Queries";
 
 const routes = [
     {
@@ -65,6 +66,19 @@ const routes = [
                 {
                     name: "Individuals",
                     href: "/individuals"
+                }
+            ]
+        },
+    },
+    {
+        path: "/queries",
+        name: "Queries",
+        component: Queries,
+        meta: {
+            breadcrumbs: [
+                {
+                    name: "Queries",
+                    href: "/queries"
                 }
             ]
         },

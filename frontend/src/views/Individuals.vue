@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import {computed, inject, onActivated, ref, watch} from "vue";
+import {computed, inject, onActivated, onUpdated, ref, watch} from "vue";
 import {useStore} from "vuex";
 import {useRoute} from "vue-router";
 
@@ -99,13 +99,27 @@ export default {
     })
 
     watch(() => route.hash.substr(1), (value, oldValue) => {
+      console.log("value:", value)
+      console.log("old value:", oldValue)
       const selected = document.getElementById(value);
       if (selected) {
         selected.style.boxShadow = "rgba(var(--primary-rgb), 0.5) 0 0px 0px 3px";
       }
-      const prevSelected = document.getElementById(oldValue);
-      if (prevSelected) {
-        prevSelected.style.boxShadow = "none";
+      if (oldValue && oldValue !== value) {
+        const prevSelected = document.getElementById(oldValue);
+        if (prevSelected) {
+          prevSelected.style.boxShadow = "none";
+        }
+      }
+    })
+
+    onUpdated(() => {
+      if (route.name === "Individuals") {
+        const hash = route.hash.substr(1)
+        const selected = document.getElementById(hash);
+        if (selected) {
+          selected.style.boxShadow = "rgba(var(--primary-rgb), 0.5) 0 0px 0px 3px";
+        }
       }
     })
 
@@ -162,13 +176,17 @@ export default {
         newIndividualRelationships.value.push({});
       }
       const emptyIndex = it.slice(0, -1).findIndex(it => it.relationshipName === undefined || it.relationshipName.length === 0)
-      if(emptyIndex !== -1) {
+      if (emptyIndex !== -1) {
         newIndividualRelationships.value.splice(emptyIndex, 1)
       }
     }, {deep: true})
 
     const onDelete = async (individual) => {
-      await store.dispatch('setLoading', {loadingText: `Deleting individual ${individual}…`, loadingId: 1100, isLoading: true});
+      await store.dispatch('setLoading', {
+        loadingText: `Deleting individual ${individual}…`,
+        loadingId: 1100,
+        isLoading: true
+      });
       try {
         let endpoint = `${process.env.VUE_APP_BACKEND}/individual/${individual}?branch=${store.getters.branch}&commit=${store.getters.commit}`
         if (store.getters.branch === "main") {
@@ -184,13 +202,20 @@ export default {
     }
 
     const addIndividual = async () => {
-      await store.dispatch('setLoading', {loadingText: `Adding individual ${newIndividual.value}…`, loadingId: 1200, isLoading: true});
+      await store.dispatch('setLoading', {
+        loadingText: `Adding individual ${newIndividual.value}…`,
+        loadingId: 1200,
+        isLoading: true
+      });
       try {
         let endpoint = `${process.env.VUE_APP_BACKEND}/individual/${newIndividual.value}?branch=${store.getters.branch}&commit=${store.getters.commit}`
-        if(store.getters.branch === "main") {
+        if (store.getters.branch === "main") {
           endpoint += `&token=${store.getters.token}`
         }
-        const response = await axios.post(endpoint, {className: newIndividualClassName.value, relationships: newIndividualRelationships.value.filter(it => it.relationshipName !== undefined && it.relationshipName.length > 0)})
+        const response = await axios.post(endpoint, {
+          className: newIndividualClassName.value,
+          relationships: newIndividualRelationships.value.filter(it => it.relationshipName !== undefined && it.relationshipName.length > 0)
+        })
         console.log(response)
         newIndividual.value = "";
         newIndividualClassName.value = "";
