@@ -358,7 +358,7 @@ public class Ontology {
 			OWLObjectProperty property = factory.getOWLObjectProperty(":#" + relationship.getRelationshipName(), prefixManager);
 			OWLNamedIndividual individual2 = factory.getOWLNamedIndividual(":#" + relationship.getIndividual2(), prefixManager);
 			OWLAxiom axiom = factory.getOWLObjectPropertyAssertionAxiom(property, individual, individual2);
-			manager.removeAxiom(ontology, axiom);
+			manager.addAxiom(ontology, axiom);
 		}
 	}
 	
