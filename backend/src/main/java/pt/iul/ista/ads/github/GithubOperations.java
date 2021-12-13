@@ -173,8 +173,6 @@ public class GithubOperations extends GithubOperationsBase {
 		lockBranch(branch);
 		try {
 			createBranchImpl(branch);
-		} catch(BranchNotFoundException e) {
-			throw new RuntimeException(e);
 		} finally {
 			unlockBranch(branch);
 		}
@@ -182,8 +180,14 @@ public class GithubOperations extends GithubOperationsBase {
 	}
 	
 	// método sem lock; necessário fazer lock antes de chamar este método
-	private static void createBranchImpl(String branch) throws IOException, BranchNotFoundException, InvalidBranchException, BranchAlreadyExistsException {
-		String latestCommitInMain = getLatestCommit(getGHRepository().getDefaultBranch());
+	private static void createBranchImpl(String branch) throws IOException, InvalidBranchException, BranchAlreadyExistsException {
+		String latestCommitInMain;
+		try {
+			latestCommitInMain = getLatestCommit(getGHRepository().getDefaultBranch());
+		} catch(BranchNotFoundException e) {
+			// não é suposto o fluxo chegar aqui
+			throw new RuntimeException(e);
+		}
 		
 		String authorizationHeader = "Bearer " + getGithubAccessToken();
 		
@@ -318,6 +322,10 @@ public class GithubOperations extends GithubOperationsBase {
 		checkIsValidBranch(branchName);
 		lockBranch(branchName);
 		try {
+			// chamar getLatestCommit para lançar BranchNotFoundException se branch não existe
+			getLatestCommit(branchName);
+			
+			// fazer sync (apagar e voltar a criar)
 			deleteBranchImpl(branchName);
 			createBranchImpl(branchName);
 		} catch(BranchAlreadyExistsException e) {
