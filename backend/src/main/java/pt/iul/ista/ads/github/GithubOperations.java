@@ -1,9 +1,11 @@
 package pt.iul.ista.ads.github;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -338,10 +340,15 @@ public class GithubOperations extends GithubOperationsBase {
 	    writer.write(owl);
 		writer.close();
 		Process process = Runtime.getRuntime().exec("java -jar owl2vowl.jar -file " + owlFilename);
+		BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		String s = null;
+		while ((s = stdInput.readLine()) != null) {
+		    System.out.println(s);
+		}
 		process.waitFor();
 		String vowl = new String(Files.readAllBytes(Paths.get(vowlFilename)));
-		new File(owlFilename).delete();
-		new File(vowlFilename).delete();
+//		new File(owlFilename).delete();
+//		new File(vowlFilename).delete();
 		return vowl;
 	}
 	
