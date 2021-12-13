@@ -682,8 +682,9 @@ public class Services {
 			description = "Branch não existe",
 			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response syncBranch(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, InvalidBranchException {
-		GithubOperations.syncBranch(branch);
+	public Response syncBranch(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch,
+			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit) throws IOException, BranchNotFoundException, InvalidBranchException, OldCommitException {
+		GithubOperations.syncBranch(branch, commit);
 		return Response.ok().build();
 	}
 	

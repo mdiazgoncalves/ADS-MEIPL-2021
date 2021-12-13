@@ -318,14 +318,12 @@ public class GithubOperations extends GithubOperationsBase {
 		}
 	}
 	
-	public static void syncBranch(String branchName) throws IOException, BranchNotFoundException, InvalidBranchException {
+	public static void syncBranch(String branchName, String commit) throws IOException, BranchNotFoundException, InvalidBranchException, OldCommitException {
 		checkIsValidBranch(branchName);
 		lockBranch(branchName);
 		try {
-			// chamar getLatestCommit para lançar BranchNotFoundException se branch não existe
-			getLatestCommit(branchName);
+			checkIsLatestCommit(branchName, commit);
 			
-			// fazer sync (apagar e voltar a criar)
 			deleteBranchImpl(branchName);
 			createBranchImpl(branchName);
 		} catch(BranchAlreadyExistsException e) {
