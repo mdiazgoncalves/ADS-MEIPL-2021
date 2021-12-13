@@ -33,9 +33,8 @@
 </template>
 
 <script>
-import axios from "axios";
 import {useRoute, useRouter} from "vue-router";
-import {computed, onActivated, onMounted, ref, watch} from "vue";
+import {computed, inject, onActivated, onMounted, ref, watch} from "vue";
 import {useStore} from "vuex";
 
 export default {
@@ -49,6 +48,7 @@ export default {
     const mainOwl = ref("")
     const branchOwl = ref("")
     const resultOwl = ref("")
+    const axios = inject('axios');
 
     onActivated(() => {
       if (store.getters.token == null || !branch.value) {
@@ -61,7 +61,7 @@ export default {
       mainOwl.value = ""
       branchOwl.value = ""
       resultOwl.value = ""
-      await store.dispatch('setLoading', "Loading OWL…");
+      await store.dispatch('setLoading', {loadingText: "Loading OWL…", loadingId: 1300, isLoading: true});
       try {
         const responses = await Promise.all([
           axios.get(`https://knowledge-base-ads-test2.herokuapp.com/branch/main/owl?token=${store.getters.token}`),
@@ -75,7 +75,7 @@ export default {
       } catch (e) {
         //
       }
-      await store.dispatch('setLoading', {loadingText: "Loading OWL…", isLoading: false});
+      await store.dispatch('setLoading', {loadingId: 1300, isLoading: false});
     }
 
     watch([() => store.getters.token, branch], async () => {
@@ -89,7 +89,7 @@ export default {
     }
 
     const merge = async () => {
-      await store.dispatch('setLoading', `Merging branch ${branch.value}…`);
+      await store.dispatch('setLoading', {loadingText: `Merging branch ${branch.value}…`, loadingId: 1500, isLoading: true});
       try {
       const response = await axios.post(`https://knowledge-base-ads-test2.herokuapp.com/branch/${branch.value}/mergeowl?token=${store.getters.token}&commit=${commit.value}`, resultOwl.value, {
         headers: {
@@ -100,7 +100,7 @@ export default {
       } catch (e) {
         //
       }
-      await store.dispatch('setLoading', {loadingText: `Merging branch ${branch.value}…`, isLoading: false});
+      await store.dispatch('setLoading', {loadingId: 1500, isLoading: false});
       router.back()
     }
 

@@ -49,8 +49,7 @@
 </template>
 
 <script>
-import {computed, onUpdated, ref, toRefs} from "vue";
-import axios from "axios";
+import {computed, inject, onUpdated, ref, toRefs} from "vue";
 import validator from 'email-validator';
 import {useStore} from "vuex";
 
@@ -65,6 +64,7 @@ export default {
     const editError = ref("")
     const email = ref("")
     const store = useStore()
+    const axios = inject('axios');
 
     const positionEditContainer = () => {
       const editButton = document.getElementById("edit-button");
@@ -87,7 +87,7 @@ export default {
     onUpdated(positionEditContainer);
 
     const edit = async () => {
-      await store.dispatch("setLoading", "Preparing editing mode…");
+      await store.dispatch("setLoading", {loadingText: "Preparing editing mode…", loadingId: 100, isLoading: true});
       editError.value = "";
       console.log(email.value)
       if (validator.validate(email.value)) {
@@ -122,7 +122,7 @@ export default {
           }
         }
       }
-      await store.dispatch("setLoading", {loadingText: "Preparing editing mode…", isLoading: false});
+      await store.dispatch("setLoading", {loadingId: 100, isLoading: false});
     }
 
     const reject = async () => {

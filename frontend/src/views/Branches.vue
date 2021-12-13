@@ -23,9 +23,8 @@
 
 <script>
 import {useStore} from "vuex";
-import {computed, onActivated, ref, watch} from "vue";
+import {computed, inject, onActivated, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
-import axios from "axios";
 
 export default {
   name: "Branches",
@@ -35,6 +34,7 @@ export default {
     const store = useStore()
     const branches = ref([])
     const selectedBranch = computed(() => store.getters.branch ?? "main")
+    const axios = inject('axios');
 
     onActivated(() => {
       if (store.getters.token == null) {
@@ -45,11 +45,11 @@ export default {
     const fetchBranches = async () => {
       if (store.getters.token == null) return;
       branches.value = []
-      await store.dispatch('setLoading', "Loading branches…");
+      await store.dispatch('setLoading', {loadingText: "Loading branches…", loadingId: 200, isLoading: true});
       const response = await axios.get(`https://knowledge-base-ads-test2.herokuapp.com/branches?token=${store.getters.token}`);
       console.log(response);
       branches.value = response.data
-      await store.dispatch('setLoading', {loadingText: "Loading branches…", isLoading: false});
+      await store.dispatch('setLoading', {loadingId: 200, isLoading: false});
     }
 
     watch(() => store.getters.token, async () => {
@@ -61,7 +61,7 @@ export default {
     onActivated(async () => await fetchBranches())
 
     const onDelete = async (branch) => {
-      await store.dispatch('setLoading', `Deleting branch ${branch}…`);
+      await store.dispatch('setLoading', {loadingText: `Deleting branch ${branch}…`, loadingId: 300, isLoading: true});
       try {
         const latestResponse = await axios.get(`https://knowledge-base-ads-test2.herokuapp.com/branch/${branch}/latest?token=${store.getters.token}`);
         const commit = latestResponse.data.latestCommit
@@ -72,7 +72,7 @@ export default {
       } catch (e) {
         //
       }
-      await store.dispatch('setLoading', {loadingText: `Deleting branch ${branch}…`, isLoading: false});
+      await store.dispatch('setLoading', {loadingId: 300, isLoading: false});
     }
 
     const merge = async (branch) => {
@@ -112,6 +112,7 @@ export default {
 }
 
 .branch {
+  cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -1,18 +1,19 @@
 const state = {
     isLoading: false,
     loadingText: "",
+    loadingIds: []
 }
 const mutations = {
     UPDATE_IS_LOADING(state, payload) {
-        if (typeof payload === 'boolean') {
-            state.isLoading = payload;
-        } else if(typeof payload === 'string') {
-            state.isLoading = true;
-            state.loadingText = payload;
+        if (payload.isLoading) {
+            state.isLoading = true
+            state.loadingIds.push(payload.loadingId)
+            state.loadingText = payload.loadingText ?? "";
         } else {
-            if(state.loadingText !== payload.loadingText && !payload.isLoading) return;
-            state.isLoading = payload.isLoading;
-            state.loadingText = payload.loadingText;
+            state.loadingIds = state.loadingIds.filter(it => it !== payload.loadingId)
+            if(state.loadingIds.length === 0) {
+                state.isLoading = false
+            }
         }
     }
 }

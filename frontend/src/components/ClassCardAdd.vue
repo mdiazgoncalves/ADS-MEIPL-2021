@@ -4,15 +4,15 @@
       <input v-model="className" name="className" placeholder="New class name"/>
     </header>
     <hr/>
-        <div class="card-superclass">
-          <p class="title">Superclass:</p>
-          <p class="superclass">
-            <input v-model="superClass" type="text" name="superClass" placeholder="Superclass name" list="classes"/>
-            <datalist id="classes">
-              <option v-for="cls in classes" :key="cls.className">{{cls.className}}</option>
-            </datalist>
-          </p>
-        </div>
+    <div class="card-superclass">
+      <p class="title">Superclass:</p>
+      <p class="superclass">
+        <input v-model="superClass" type="text" name="superClass" placeholder="Superclass name" list="classes" autocomplete="off"/>
+        <datalist id="classes">
+          <option v-for="cls in classes" :key="cls.className">{{ cls.className }}</option>
+        </datalist>
+      </p>
+    </div>
     <div>
       <button class="primary save-new-class" @click="onAdd(className, superClass)">Add class</button>
     </div>
@@ -29,10 +29,10 @@ export default {
   },
   emits: ["add"],
   setup(props, {emit}) {
-    const { classes } = toRefs(props)
+    const {classes} = toRefs(props)
     const className = ref("")
     const superClass = ref("")
-    const onAdd = async(className, superClass) => {
+    const onAdd = async (className, superClass) => {
       await emit("add", {'className': className, 'superClass': superClass});
     }
     return {

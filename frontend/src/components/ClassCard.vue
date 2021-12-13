@@ -11,7 +11,7 @@
         <router-link :to="'#'+_class.superClass.className">{{ _class.superClass.className }}</router-link>
       </p>
     </div>
-    <div v-if="_class.subclasses && _class.subclasses.length > 0" class="card-subclasses">
+    <div v-if="_class.subclasses && _class.subclasses.length > 0">
       <p class="title">Subclasses:</p>
       <ul class="subclasses">
         <li v-for="(subclass, index) in _class.subclasses" :key="index" class="subclass">
