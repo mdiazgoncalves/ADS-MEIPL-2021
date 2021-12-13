@@ -687,6 +687,18 @@ public class Services {
 		GithubOperations.syncBranch(branch, commit);
 		return Response.ok().build();
 	}
+
+	
+	// **************************************************
+	// WebVOWL
+	// **************************************************
+	
+	@Path("/branch/{branch}/vowl")
+	@GET
+	@Produces("application/json")
+	public Response getBranchVOWL(@PathParam("branch") String branch) throws IOException, BranchNotFoundException, InterruptedException {
+		return Response.ok(GithubOperations.getBranchVowl(branch)).build();
+	}
 	
 	
 	// **************************************************

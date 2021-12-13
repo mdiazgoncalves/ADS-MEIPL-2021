@@ -1,9 +1,15 @@
 package pt.iul.ista.ads.github;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -101,28 +107,36 @@ public class GithubOperations extends GithubOperationsBase {
 		}
 	}
 	
-	private static GetOWLResponse getOWL(String branch) throws IOException {		
-		// get ontology from repo
-		GHTree tree = getGHRepository().getTree(branch);
-		GHBlob owlBlob = null;
-		for(GHTreeEntry entry : tree.getTree())
-			if(entry.getPath().equals(owlPath))
-				owlBlob = entry.asBlob();
-		String owl = new String(Base64.getMimeDecoder().decode(owlBlob.getContent()));
-
-		GetOWLResponse res = new GetOWLResponse();
-		res.sha = owlBlob.getSha();
-		res.owl = owl;
-		return res;
+	private static GetOWLResponse getOWL(String branch) throws IOException, BranchNotFoundException {
+		try {
+			// get ontology from repo
+			GHTree tree = getGHRepository().getTree(branch);
+			GHBlob owlBlob = null;
+			for(GHTreeEntry entry : tree.getTree())
+				if(entry.getPath().equals(owlPath))
+					owlBlob = entry.asBlob();
+			String owl = new String(Base64.getMimeDecoder().decode(owlBlob.getContent()));
+	
+			GetOWLResponse res = new GetOWLResponse();
+			res.sha = owlBlob.getSha();
+			res.owl = owl;
+			return res;
+		} catch(GHFileNotFoundException e) {
+			throw new BranchNotFoundException(branch);
+		}
 	}
 	
-	private static String getOWLSha(String branch) throws IOException {
-		GHTree tree = getGHRepository().getTree(branch);
-		GHBlob owlBlob = null;
-		for(GHTreeEntry entry : tree.getTree())
-			if(entry.getPath().equals(owlPath))
-				owlBlob = entry.asBlob();
-		return owlBlob.getSha();
+	private static String getOWLSha(String branch) throws IOException, BranchNotFoundException {
+		try {
+			GHTree tree = getGHRepository().getTree(branch);
+			GHBlob owlBlob = null;
+			for(GHTreeEntry entry : tree.getTree())
+				if(entry.getPath().equals(owlPath))
+					owlBlob = entry.asBlob();
+			return owlBlob.getSha();
+		} catch(GHFileNotFoundException e) {
+			throw new BranchNotFoundException(branch);
+		}
 	}
 	
 	private static class GetOWLResponse {
@@ -311,11 +325,24 @@ public class GithubOperations extends GithubOperationsBase {
 	}
 	
 	public static String getBranchOwl(String branchName) throws IOException, BranchNotFoundException {
-		try {
-			return getOWL(branchName).owl;
-		} catch(GHFileNotFoundException e) {
-			throw new BranchNotFoundException(branchName);
-		}
+		return getOWL(branchName).owl;
+	}
+	
+	public static String getBranchVowl(String branchName) throws IOException, BranchNotFoundException, InterruptedException {
+		String owl = getOWL(branchName).owl;
+		BufferedWriter writer;
+		String uuid = UUID.randomUUID().toString();
+		String owlFilename = uuid + ".owl";
+		String vowlFilename = uuid + ".json";
+		writer = new BufferedWriter(new FileWriter(owlFilename));
+	    writer.write(owl);
+		writer.close();
+		Process process = Runtime.getRuntime().exec("java -jar owl2vowl.jar -file " + owlFilename);
+		process.waitFor();
+		String vowl = new String(Files.readAllBytes(Paths.get(vowlFilename)));
+		new File(owlFilename).delete();
+		new File(vowlFilename).delete();
+		return vowl;
 	}
 	
 	public static void syncBranch(String branchName, String commit) throws IOException, BranchNotFoundException, InvalidBranchException, OldCommitException {
