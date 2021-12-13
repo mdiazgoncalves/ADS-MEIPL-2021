@@ -21,6 +21,7 @@ import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
+import org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -44,6 +45,7 @@ import pt.iul.ista.ads.models.ClassesResponseModel;
 import pt.iul.ista.ads.models.IndividualDetailResponseModel;
 import pt.iul.ista.ads.models.IndividualRelationshipModel;
 import pt.iul.ista.ads.models.RelationshipDetailResponseModel;
+import pt.iul.ista.ads.models.RelationshipsResponseModel;
 
 public class Ontology {
 	
@@ -185,19 +187,27 @@ public class Ontology {
 		manager.applyChanges(remover.getChanges());
 	}
 	
-	public List<String> listRelationships() {
-		return ontology.getObjectPropertiesInSignature().stream()
-				.map(property -> owlEntityToString(property))
-				.collect(Collectors.toList());
+	public List<RelationshipsResponseModel.RelationshipModel> listRelationships() {
+		List<RelationshipsResponseModel.RelationshipModel> res = new ArrayList<RelationshipsResponseModel.RelationshipModel>();
+		for(OWLObjectProperty property : ontology.getObjectPropertiesInSignature()) {
+			RelationshipsResponseModel.RelationshipModel relationshipModel = new RelationshipsResponseModel.RelationshipModel();
+			relationshipModel.setName(owlEntityToString(property));
+			OWLClass class1 = ontology.getObjectPropertyDomainAxioms(property).stream().findFirst().get().getDomain().asOWLClass();
+			relationshipModel.setClassName1(owlEntityToString(class1));
+			OWLClass class2 = ontology.getObjectPropertyRangeAxioms(property).stream().findFirst().get().getRange().asOWLClass();
+			relationshipModel.setClassName2(owlEntityToString(class2));
+			res.add(relationshipModel);
+		}
+		return res;
 	}
 	
-	public List<RelationshipDetailResponseModel.RelationshipModel> detailRelationship(String relationship) throws RelationshipNotFoundOntologyException {
+	public List<RelationshipDetailResponseModel.RelationshipInstanceModel> detailRelationship(String relationship) throws RelationshipNotFoundOntologyException {
 		checkRelationshipExists(relationship);
-		List<RelationshipDetailResponseModel.RelationshipModel> res = new ArrayList<RelationshipDetailResponseModel.RelationshipModel>();
+		List<RelationshipDetailResponseModel.RelationshipInstanceModel> res = new ArrayList<RelationshipDetailResponseModel.RelationshipInstanceModel>();
 		OWLObjectProperty property = factory.getOWLObjectProperty(":#" + relationship, prefixManager);
 		for(OWLObjectPropertyAssertionAxiom axiom : ontology.getAxioms(AxiomType.OBJECT_PROPERTY_ASSERTION, Imports.EXCLUDED)) {
 			if(axiom.getObjectPropertiesInSignature().contains(property)) {
-				RelationshipDetailResponseModel.RelationshipModel relationshipModel = new RelationshipDetailResponseModel.RelationshipModel();
+				RelationshipDetailResponseModel.RelationshipInstanceModel relationshipModel = new RelationshipDetailResponseModel.RelationshipInstanceModel();
 				relationshipModel.setIndividual1(owlEntityToString((OWLNamedIndividual) axiom.getSubject()));
 				relationshipModel.setIndividual2(owlEntityToString((OWLNamedIndividual) axiom.getObject()));
 				res.add(relationshipModel);
