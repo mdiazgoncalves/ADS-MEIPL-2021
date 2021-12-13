@@ -64,9 +64,9 @@ export default {
       await store.dispatch('setLoading', {loadingText: "Loading OWL…", loadingId: 1300, isLoading: true});
       try {
         const responses = await Promise.all([
-          axios.get(`https://knowledge-base-ads-test2.herokuapp.com/branch/main/owl?token=${store.getters.token}`),
-          axios.get(`https://knowledge-base-ads-test2.herokuapp.com/branch/${branch.value}/owl?token=${store.getters.token}`),
-          axios.get(`https://knowledge-base-ads-test2.herokuapp.com/branch/${branch.value}/latest?token=${store.getters.token}`),
+          axios.get(`${process.env.VUE_APP_BACKEND}/branch/main/owl?token=${store.getters.token}`),
+          axios.get(`${process.env.VUE_APP_BACKEND}/branch/${branch.value}/owl?token=${store.getters.token}`),
+          axios.get(`${process.env.VUE_APP_BACKEND}/branch/${branch.value}/latest?token=${store.getters.token}`),
         ]);
         console.log(responses);
         mainOwl.value = responses[0].data
@@ -91,7 +91,7 @@ export default {
     const merge = async () => {
       await store.dispatch('setLoading', {loadingText: `Merging branch ${branch.value}…`, loadingId: 1500, isLoading: true});
       try {
-      const response = await axios.post(`https://knowledge-base-ads-test2.herokuapp.com/branch/${branch.value}/mergeowl?token=${store.getters.token}&commit=${commit.value}`, resultOwl.value, {
+      const response = await axios.post(`${process.env.VUE_APP_BACKEND}/branch/${branch.value}/mergeowl?token=${store.getters.token}&commit=${commit.value}`, resultOwl.value, {
         headers: {
           "Content-Type": "application/xml"
         }

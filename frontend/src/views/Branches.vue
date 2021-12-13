@@ -46,7 +46,7 @@ export default {
       if (store.getters.token == null) return;
       branches.value = []
       await store.dispatch('setLoading', {loadingText: "Loading branches…", loadingId: 200, isLoading: true});
-      const response = await axios.get(`https://knowledge-base-ads-test2.herokuapp.com/branches?token=${store.getters.token}`);
+      const response = await axios.get(`${process.env.VUE_APP_BACKEND}/branches?token=${store.getters.token}`);
       console.log(response);
       branches.value = response.data
       await store.dispatch('setLoading', {loadingId: 200, isLoading: false});
@@ -63,10 +63,10 @@ export default {
     const onDelete = async (branch) => {
       await store.dispatch('setLoading', {loadingText: `Deleting branch ${branch}…`, loadingId: 300, isLoading: true});
       try {
-        const latestResponse = await axios.get(`https://knowledge-base-ads-test2.herokuapp.com/branch/${branch}/latest?token=${store.getters.token}`);
+        const latestResponse = await axios.get(`${process.env.VUE_APP_BACKEND}/branch/${branch}/latest?token=${store.getters.token}`);
         const commit = latestResponse.data.latestCommit
         console.log(latestResponse)
-        const response = await axios.delete(`https://knowledge-base-ads-test2.herokuapp.com/branch/${branch}?commit=${commit}&token=${store.getters.token}`);
+        const response = await axios.delete(`${process.env.VUE_APP_BACKEND}/branch/${branch}?commit=${commit}&token=${store.getters.token}`);
         console.log(response)
         await fetchBranches();
       } catch (e) {

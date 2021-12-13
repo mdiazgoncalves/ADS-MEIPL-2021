@@ -83,7 +83,7 @@ export default {
     const fetchIndividuals = async () => {
       individuals.value = []
       await store.dispatch('setLoading', {loadingText: "Loading individuals…", loadingId: 700, isLoading: true});
-      const response = store.getters.branch ? await axios.get(`https://knowledge-base-ads-test2.herokuapp.com/individuals?branch=${store.getters.branch}`) : await axios.get("https://knowledge-base-ads-test2.herokuapp.com/individuals?branch=main");
+      const response = store.getters.branch ? await axios.get(`${process.env.VUE_APP_BACKEND}/individuals?branch=${store.getters.branch}`) : await axios.get(`${process.env.VUE_APP_BACKEND}/individuals?branch=main`);
       console.log(response);
       await store.dispatch('setCommit', response.data.latestCommit);
       individuals.value = response.data.data.sort((a, b) => a.className.localeCompare(b.className));
@@ -112,7 +112,7 @@ export default {
     const fetchRelationships = async () => {
       relationships.value = []
       await store.dispatch('setLoading', {loadingText: "Loading individuals…", loadingId: 900, isLoading: true});
-      const response = store.getters.branch ? await axios.get(`https://knowledge-base-ads-test2.herokuapp.com/relationships?branch=${store.getters.branch}`) : await axios.get("https://knowledge-base-ads-test2.herokuapp.com/relationships?branch=main");
+      const response = store.getters.branch ? await axios.get(`${process.env.VUE_APP_BACKEND}/relationships?branch=${store.getters.branch}`) : await axios.get(`${process.env.VUE_APP_BACKEND}/relationships?branch=main`);
       console.log(response);
       await store.dispatch('setCommit', response.data.latestCommit);
       relationships.value = response.data.data;
@@ -130,7 +130,7 @@ export default {
     const fetchClasses = async (branch) => {
       classes.value = []
       await store.dispatch('setLoading', {loadingText: "Loading individuals…", loadingId: 1000, isLoading: true});
-      const response = branch ? await axios.get(`https://knowledge-base-ads-test2.herokuapp.com/classes?branch=${branch}`) : await axios.get("https://knowledge-base-ads-test2.herokuapp.com/classes?branch=main");
+      const response = branch ? await axios.get(`${process.env.VUE_APP_BACKEND}/classes?branch=${branch}`) : await axios.get(`${process.env.VUE_APP_BACKEND}/classes?branch=main`);
       console.log(response);
       await store.dispatch('setCommit', response.data.latestCommit);
       const classesToAdd = response.data.data;
@@ -170,7 +170,7 @@ export default {
     const onDelete = async (individual) => {
       await store.dispatch('setLoading', {loadingText: `Deleting individual ${individual}…`, loadingId: 1100, isLoading: true});
       try {
-        let endpoint = `https://knowledge-base-ads-test2.herokuapp.com/individual/${individual}?branch=${store.getters.branch}&commit=${store.getters.commit}`
+        let endpoint = `${process.env.VUE_APP_BACKEND}/individual/${individual}?branch=${store.getters.branch}&commit=${store.getters.commit}`
         if (store.getters.branch === "main") {
           endpoint += `&token=${store.getters.token}`
         }
@@ -186,7 +186,7 @@ export default {
     const addIndividual = async () => {
       await store.dispatch('setLoading', {loadingText: `Adding individual ${newIndividual.value}…`, loadingId: 1200, isLoading: true});
       try {
-        let endpoint = `https://knowledge-base-ads-test2.herokuapp.com/individual/${newIndividual.value}?branch=${store.getters.branch}&commit=${store.getters.commit}`
+        let endpoint = `${process.env.VUE_APP_BACKEND}/individual/${newIndividual.value}?branch=${store.getters.branch}&commit=${store.getters.commit}`
         if(store.getters.branch === "main") {
           endpoint += `&token=${store.getters.token}`
         }

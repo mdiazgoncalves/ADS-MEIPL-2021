@@ -64,7 +64,7 @@ export default {
     const fetchRelationships = async () => {
       relationships.value = []
       await store.dispatch('setLoading', {loadingText: "Loading relationships…", loadingId: 800, isLoading: true});
-      const response = store.getters.branch ? await axios.get(`https://knowledge-base-ads-test2.herokuapp.com/relationships?branch=${store.getters.branch}`) : await axios.get("https://knowledge-base-ads-test2.herokuapp.com/relationships?branch=main");
+      const response = store.getters.branch ? await axios.get(`${process.env.VUE_APP_BACKEND}/relationships?branch=${store.getters.branch}`) : await axios.get(`${process.env.VUE_APP_BACKEND}/relationships?branch=main`);
       console.log(response);
       await store.dispatch('setCommit', response.data.latestCommit);
       relationships.value = response.data.data;
@@ -82,7 +82,7 @@ export default {
     const fetchClasses = async (branch) => {
       classes.value = []
       await store.dispatch('setLoading', {loadingText: "Loading relationships…", loadingId: 1400, isLoading: true});
-      const response = branch ? await axios.get(`https://knowledge-base-ads-test2.herokuapp.com/classes?branch=${branch}`) : await axios.get("https://knowledge-base-ads-test2.herokuapp.com/classes?branch=main");
+      const response = branch ? await axios.get(`${process.env.VUE_APP_BACKEND}/classes?branch=${branch}`) : await axios.get(`${process.env.VUE_APP_BACKEND}/classes?branch=main`);
       console.log(response);
       await store.dispatch('setCommit', response.data.latestCommit);
       const classesToAdd = response.data.data;
@@ -111,7 +111,7 @@ export default {
     const onDelete = async (relationship) => {
       await store.dispatch('setLoading', {loadingText: `Deleting relationship ${relationship}…`, loadingId: 1600, isLoading: true});
       try {
-        let endpoint = `https://knowledge-base-ads-test2.herokuapp.com/relationship/${relationship}?branch=${store.getters.branch}&commit=${store.getters.commit}`
+        let endpoint = `${process.env.VUE_APP_BACKEND}/relationship/${relationship}?branch=${store.getters.branch}&commit=${store.getters.commit}`
         if(store.getters.branch === "main") {
           endpoint += `&token=${store.getters.token}`
         }
@@ -127,7 +127,7 @@ export default {
     const addRelationship = async () => {
       await store.dispatch('setLoading', {loadingText: `Adding relationship ${newRelationship.value}…`, loadingId: 1700, isLoading: true});
       try {
-        let endpoint = `https://knowledge-base-ads-test2.herokuapp.com/relationship/${newRelationship.value}?branch=${store.getters.branch}&commit=${store.getters.commit}`
+        let endpoint = `${process.env.VUE_APP_BACKEND}/relationship/${newRelationship.value}?branch=${store.getters.branch}&commit=${store.getters.commit}`
         if(store.getters.branch === "main") {
           endpoint += `&token=${store.getters.token}`
         }

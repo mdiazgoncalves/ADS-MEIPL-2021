@@ -20,7 +20,7 @@ export default {
     const fetchClasses = async (branch) => {
       classes.value = []
       await store.dispatch('setLoading', {loadingText: "Loading classes…", loadingId: 400, isLoading: true});
-      const response = branch ? await axios.get(`https://knowledge-base-ads-test2.herokuapp.com/classes?branch=${branch}`) : await axios.get("https://knowledge-base-ads-test2.herokuapp.com/classes?branch=main");
+      const response = branch ? await axios.get(`${process.env.VUE_APP_BACKEND}/classes?branch=${branch}`) : await axios.get(`${process.env.VUE_APP_BACKEND}/classes?branch=main`);
       console.log(response);
       await store.dispatch('setCommit', response.data.latestCommit);
       const classesToAdd = response.data.data;
@@ -49,7 +49,7 @@ export default {
     const deleteClass = async (className) => {
       await store.dispatch('setLoading', {loadingText: `Deleting class ${className}…`, loadingId: 500, isLoading: true});
       try {
-        let endpoint = `https://knowledge-base-ads-test2.herokuapp.com/class/${className}?branch=${store.getters.branch}&commit=${store.getters.commit}`
+        let endpoint = `${process.env.VUE_APP_BACKEND}/class/${className}?branch=${store.getters.branch}&commit=${store.getters.commit}`
         if(store.getters.branch === "main") {
           endpoint += `&token=${store.getters.token}`
         }
@@ -65,7 +65,7 @@ export default {
     const addClass = async ({className, superClass}) => {
       await store.dispatch('setLoading', {loadingText: `Adding class ${className}…`, loadingId: 600, isLoading: true});
       try {
-        let endpoint = `https://knowledge-base-ads-test2.herokuapp.com/class/${className}?branch=${store.getters.branch}&commit=${store.getters.commit}`
+        let endpoint = `${process.env.VUE_APP_BACKEND}/class/${className}?branch=${store.getters.branch}&commit=${store.getters.commit}`
         if(store.getters.branch === "main") {
           endpoint += `&token=${store.getters.token}`
         }

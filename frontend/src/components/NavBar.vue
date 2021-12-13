@@ -92,7 +92,7 @@ export default {
       console.log(email.value)
       if (validator.validate(email.value)) {
         try {
-          const response = await axios.post(`https://knowledge-base-ads-test2.herokuapp.com/branch/${email.value}`);
+          const response = await axios.post(`${process.env.VUE_APP_BACKEND}/branch/${email.value}`);
           await store.dispatch("setBranch", email.value);
           isEditVisible.value = false;
           console.log(response);
@@ -106,7 +106,7 @@ export default {
         }
       } else {
         try {
-          const response = await axios.post(`https://knowledge-base-ads-test2.herokuapp.com/login/curator?password=${email.value}`);
+          const response = await axios.post(`${process.env.VUE_APP_BACKEND}/login/curator?password=${email.value}`);
           console.log(response);
           const token = response.data;
           console.log(token);
