@@ -13,6 +13,7 @@ import org.kohsuke.github.GHContentUpdateResponse;
 import org.kohsuke.github.GHFileNotFoundException;
 import org.kohsuke.github.GHTree;
 import org.kohsuke.github.GHTreeEntry;
+import org.kohsuke.github.HttpException;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -236,14 +237,17 @@ public class GithubOperations extends GithubOperationsBase {
 		return res;
 	}
 	
-	public static void mergeBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException {
+	public static void mergeBranch(String branchName, String commit) throws IOException, BranchNotFoundException, OldCommitException, InvalidBranchException, MergeConflictException {
 		checkIsValidBranch(branchName);
 		lockBranch(branchName);
 		try {
 			checkIsLatestCommit(branchName, commit);
 			GHBranch branch = getGHRepository().getBranch(branchName);
 			getGHRepository().getBranch(getDefaultBranch()).merge(branch, "Merge branch " + branchName);
-			deleteBranch(branchName, commit);
+			deleteBranchImpl(branchName);
+		} catch(HttpException e) {
+			if(e.getResponseCode() == 409)
+				throw new MergeConflictException();
 		} finally {
 			unlockBranch(branchName);
 		}

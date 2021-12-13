@@ -27,6 +27,7 @@ import pt.iul.ista.ads.github.BranchNotFoundException;
 import pt.iul.ista.ads.github.GithubOperations;
 import pt.iul.ista.ads.github.GithubOperations.ReadOntologyResponse;
 import pt.iul.ista.ads.github.InvalidBranchException;
+import pt.iul.ista.ads.github.MergeConflictException;
 import pt.iul.ista.ads.github.OldCommitException;
 import pt.iul.ista.ads.github.OntologyEditorCallback;
 import pt.iul.ista.ads.models.*;
@@ -531,7 +532,7 @@ public class Services {
 	@Produces("application/json")
 	public Response mergeBranch(@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Token de autorização", required = true) @QueryParam("token") String token,
-			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException, InvalidBranchException {
+			@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OldCommitException, UnauthorizedException, InvalidBranchException, MergeConflictException {
 		Authorization.checkValidToken(token);
 		GithubOperations.mergeBranch(branch, commit);
 		return Response.ok().build();
