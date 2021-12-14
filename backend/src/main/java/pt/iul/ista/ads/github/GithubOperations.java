@@ -2,7 +2,6 @@ package pt.iul.ista.ads.github;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,9 +10,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.kohsuke.github.GHBlob;
@@ -39,6 +36,8 @@ import pt.iul.ista.ads.owl.OntologyException;
 public class GithubOperations extends GithubOperationsBase {
 
 	private static ConcurrentHashMap<String, ReentrantLock> locks = new ConcurrentHashMap<String, ReentrantLock>();
+	
+	private static ReentrantLock vowlLock = new ReentrantLock();
 	
 	private static final String owlPath = "knowledge-base.owl";
 	
@@ -332,25 +331,27 @@ public class GithubOperations extends GithubOperationsBase {
 	}
 	
 	public static String getBranchVowl(String branchName) throws IOException, BranchNotFoundException, InterruptedException {
-		String owl = getOWL(branchName).owl;
-		BufferedWriter writer;
-		int randomNum = ThreadLocalRandom.current().nextInt(0, 1000000);
-		String owlFilename = randomNum + ".owl";
-		String vowlFilename = randomNum + ".json";
-		writer = new BufferedWriter(new FileWriter(owlFilename));
-	    writer.write(owl);
-		writer.close();
-		Process process = Runtime.getRuntime().exec("java -jar owl2vowl.jar -file " + owlFilename);
-		BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		String s = null;
-		while ((s = stdInput.readLine()) != null) {
-		    System.out.println(s);
+		vowlLock.lock();
+		try {
+			String owl = getOWL(branchName).owl;
+			BufferedWriter writer;
+			String owlFilename = "knowledge-base.owl";
+			String vowlFilename = "knowledge-base.json";
+			writer = new BufferedWriter(new FileWriter(owlFilename));
+		    writer.write(owl);
+			writer.close();
+			Process process = Runtime.getRuntime().exec("java -jar owl2vowl.jar -file " + owlFilename);
+			BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			String s = null;
+			while ((s = stdInput.readLine()) != null) {
+			    System.out.println(s);
+			}
+			process.waitFor();
+			String vowl = new String(Files.readAllBytes(Paths.get(vowlFilename)));
+			return vowl;
+		} finally {
+			vowlLock.unlock();
 		}
-		process.waitFor();
-		String vowl = new String(Files.readAllBytes(Paths.get(vowlFilename)));
-		new File(owlFilename).delete();
-		new File(vowlFilename).delete();
-		return vowl;
 	}
 	
 	public static void syncBranch(String branchName, String commit) throws IOException, BranchNotFoundException, InvalidBranchException, OldCommitException {
