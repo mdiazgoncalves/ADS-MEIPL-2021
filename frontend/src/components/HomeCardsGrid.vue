@@ -1,7 +1,7 @@
 <template>
   <section id="home-cards">
     <div class="grid-container">
-      <HomeCard v-for="(card, index) in cards" :key="index" :title="card.title" :src="card.src" :alt="card.alt" :href="card.href" />
+      <HomeCard v-for="(card, index) in cards" :key="index" :title="card.title" :src="card.src" :alt="card.alt" :href="card.href" :external="card.external" />
     </div>
   </section>
 </template>

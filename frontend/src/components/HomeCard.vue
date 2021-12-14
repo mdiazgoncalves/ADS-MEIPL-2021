@@ -1,11 +1,17 @@
 <template>
   <div class="card">
-    <router-link :to="href">
+    <router-link :to="href" v-if="!external">
       <header>
         <img :src="src" :alt="alt">
       </header>
       <h2>{{ title }}</h2>
     </router-link>
+    <a :href="href" target="_blank" v-else>
+      <header>
+        <img :src="src" :alt="alt">
+      </header>
+      <h2>{{ title }}</h2>
+    </a>
   </div>
 </template>
 
@@ -17,6 +23,7 @@ export default {
     href: {type: String, required: true},
     src: {type: String, required: true},
     alt: {type: String, required: true},
+    external: {type: Boolean, default: false},
   },
 }
 </script>
