@@ -334,8 +334,10 @@ public class GithubOperations extends GithubOperationsBase {
 		String owl = getOWL(branchName).owl;
 		BufferedWriter writer;
 		String uuid = UUID.randomUUID().toString();
-		String owlFilename = uuid + ".owl";
-		String vowlFilename = uuid + ".json";
+//		String owlFilename = uuid + ".owl";
+		String owlFilename = "knowledge-base.owl";
+//		String vowlFilename = uuid + ".json";
+		String vowlFilename = "knowledge-base.json";
 		writer = new BufferedWriter(new FileWriter(owlFilename));
 	    writer.write(owl);
 		writer.close();
