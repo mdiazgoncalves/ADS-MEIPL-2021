@@ -695,8 +695,16 @@ public class Services {
 	
 	@Path("/branch/{branch}/vowl")
 	@GET
+	@Operation(tags = {"Visualização"},
+	summary = "Devolve json para usar com o WebVOWL",
+	description = "Converte a ontologia num json (vowl) para usar com o WebVOWL para visualizar a ontologia",
+	responses = {@ApiResponse(responseCode = "200",
+			description = "OK"),
+			@ApiResponse(responseCode = "404",
+			description = "Branch não existe",
+			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response getBranchVOWL(@PathParam("branch") String branch) throws IOException, BranchNotFoundException, InterruptedException {
+	public Response getBranchVOWL(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, InterruptedException {
 		return Response.ok(GithubOperations.getBranchVowl(branch)).build();
 	}
 	
