@@ -132,7 +132,7 @@ public class Services {
 	@Consumes("application/json")
 	public Response createClass(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token do editor") @QueryParam("token") String token,
+			@Parameter(description = "Token do curador (necessário para editar main diretamente)") @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className,
 			@Parameter(description = "Detalhes da nova classe", required = true) ClassCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		String newCommit = editOntology(branch, commit, token, (ontology) -> {
@@ -164,7 +164,7 @@ public class Services {
 	@Consumes("application/json")
 	public Response alterClass(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token do editor") @QueryParam("token") String token,
+			@Parameter(description = "Token do curador (necessário para editar main diretamente)") @QueryParam("token") String token,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className,
 			@Parameter(description = "Alterações a fazer à classe", required = true) ClassAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		String newCommit = editOntology(branch, commit, token, (ontology) -> {
@@ -192,7 +192,7 @@ public class Services {
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response deleteClass(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
-			@Parameter(description = "Token do editor") @QueryParam("token") String token,
+			@Parameter(description = "Token do curador (necessário para editar main diretamente)") @QueryParam("token") String token,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Nome de classe") @PathParam("class") String className) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		
@@ -265,7 +265,7 @@ public class Services {
 	@Consumes("application/json")
 	public Response createRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token do editor") @QueryParam("token") String token,
+			@Parameter(description = "Token do curador (necessário para editar main diretamente)") @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName,
 			@Parameter(description = "Detalhes da nova relação", required = true) RelationshipCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		String newCommit = editOntology(branch, commit, token, (ontology) -> {
@@ -295,7 +295,7 @@ public class Services {
 	@Consumes("application/json")
 	public Response alterRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token do editor") @QueryParam("token") String token,
+			@Parameter(description = "Token do curador (necessário para editar main diretamente)") @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName,
 			@Parameter(description = "Alterações a fazer à relação", required = true) RelationshipAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		String newCommit = editOntology(branch, commit, token, (ontology) -> {
@@ -324,7 +324,7 @@ public class Services {
 	@Produces("application/json")
 	public Response deleteRelationship(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token do editor") @QueryParam("token") String token,
+			@Parameter(description = "Token do curador (necessário para editar main diretamente)") @QueryParam("token") String token,
 			@Parameter(description = "Nome de relação") @PathParam("relationship") String relationshipName) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		String newCommit = editOntology(branch, commit, token, (ontology) -> {
 			ontology.deleteRelationship(relationshipName);
@@ -394,7 +394,7 @@ public class Services {
 	@Consumes("application/json")
 	public Response createIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token do editor") @QueryParam("token") String token,
+			@Parameter(description = "Token do curador (necessário para editar main diretamente)") @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName,
 			@Parameter(description = "Detalhes do novo indivíduo", required = true) IndividualCreateRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		String newCommit = editOntology(branch, commit, token, (ontology) -> {
@@ -425,7 +425,7 @@ public class Services {
 	@Consumes("application/json")
 	public Response alterIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
-			@Parameter(description = "Token do editor") @QueryParam("token") String token,
+			@Parameter(description = "Token do curador (necessário para editar main diretamente)") @QueryParam("token") String token,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName,
 			@Parameter(description = "Alterações a fazer ao indivíduo", required = true) IndividualAlterRequestModel body) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		String newCommit = editOntology(branch, commit, token, (ontology) -> {
@@ -453,7 +453,7 @@ public class Services {
 				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
 	public Response deleteIndividual(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
-			@Parameter(description = "Token do editor") @QueryParam("token") String token,
+			@Parameter(description = "Token do curador (necessário para editar main diretamente)") @QueryParam("token") String token,
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit,
 			@Parameter(description = "Nome de indivíduo") @PathParam("individual") String individualName) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		String newCommit = editOntology(branch, commit, token, (ontology) -> {
@@ -686,6 +686,27 @@ public class Services {
 			@Parameter(description = "Hash do commit mais recente conhecido pelo cliente", required = true) @QueryParam("commit") String commit) throws IOException, BranchNotFoundException, InvalidBranchException, OldCommitException {
 		GithubOperations.syncBranch(branch, commit);
 		return Response.ok().build();
+	}
+
+	
+	// **************************************************
+	// WebVOWL
+	// **************************************************
+	
+	@Path("/branch/{branch}/vowl")
+	@GET
+	@Operation(tags = {"Visualização"},
+	summary = "Devolve json para usar com o WebVOWL",
+	description = "Converte a ontologia num json (vowl) para usar com o WebVOWL para visualizar a ontologia",
+	responses = {@ApiResponse(responseCode = "200",
+			description = "OK"),
+			@ApiResponse(responseCode = "404",
+			description = "Branch não existe",
+			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
+	@Produces("application/json")
+	public Response getBranchVOWL(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OntologyException {
+		Ontology ontology = GithubOperations.readOntology(branch).getOntology();
+		return Response.ok(ontology.toVOWLString()).build();
 	}
 	
 	
