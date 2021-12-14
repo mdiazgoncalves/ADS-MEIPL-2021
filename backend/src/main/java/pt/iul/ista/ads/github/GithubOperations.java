@@ -13,6 +13,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.kohsuke.github.GHBlob;
@@ -333,11 +334,9 @@ public class GithubOperations extends GithubOperationsBase {
 	public static String getBranchVowl(String branchName) throws IOException, BranchNotFoundException, InterruptedException {
 		String owl = getOWL(branchName).owl;
 		BufferedWriter writer;
-		String uuid = UUID.randomUUID().toString();
-//		String owlFilename = uuid + ".owl";
-		String owlFilename = "knowledge-base.owl";
-//		String vowlFilename = uuid + ".json";
-		String vowlFilename = "knowledge-base.json";
+		int randomNum = ThreadLocalRandom.current().nextInt(0, 1000000);
+		String owlFilename = randomNum + ".owl";
+		String vowlFilename = randomNum + ".json";
 		writer = new BufferedWriter(new FileWriter(owlFilename));
 	    writer.write(owl);
 		writer.close();
@@ -349,8 +348,8 @@ public class GithubOperations extends GithubOperationsBase {
 		}
 		process.waitFor();
 		String vowl = new String(Files.readAllBytes(Paths.get(vowlFilename)));
-//		new File(owlFilename).delete();
-//		new File(vowlFilename).delete();
+		new File(owlFilename).delete();
+		new File(vowlFilename).delete();
 		return vowl;
 	}
 	
