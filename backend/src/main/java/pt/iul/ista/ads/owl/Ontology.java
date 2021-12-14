@@ -86,8 +86,8 @@ public class Ontology {
 		}
 	}
 
-	public void addClass(String className, String superclassName) throws ClassNotFoundOntologyException, ClassAlreadyExistsOntologyException {
-		checkClassNotExists(className);
+	public void addClass(String className, String superclassName) throws ClassNotFoundOntologyException, ClassAlreadyExistsOntologyException, InvalidNameOntologyException {
+		checkValidNewClass(className);
 		OWLClass newClass = factory.getOWLClass(":#" + className, prefixManager);
 		manager.addAxiom(ontology, factory.getOWLDeclarationAxiom(newClass));
 		if(superclassName != null && !superclassName.isEmpty()) {
@@ -102,7 +102,9 @@ public class Ontology {
 			throw new ClassNotFoundOntologyException(className);
 	}
 	
-	private void checkClassNotExists(String className) throws ClassAlreadyExistsOntologyException {
+	private void checkValidNewClass(String className) throws ClassAlreadyExistsOntologyException, InvalidNameOntologyException {
+		if(!isValidName(className))
+			throw new InvalidNameOntologyException(className);
 		if(ontology.containsClassInSignature(IRI.create(documentIRI.toString() + "#" + className)))
 			throw new ClassAlreadyExistsOntologyException(className);
 	}
@@ -155,11 +157,11 @@ public class Ontology {
 		return res;
 	}
 	
-	public void alterClass(String className, String newClassName, String newSuperclassName) throws ClassNotFoundOntologyException, ClassAlreadyExistsOntologyException {
+	public void alterClass(String className, String newClassName, String newSuperclassName) throws ClassNotFoundOntologyException, ClassAlreadyExistsOntologyException, InvalidNameOntologyException {
 		// validar os parâmetros primeiro
 		checkClassExists(className);
 		if(newClassName != null) {
-			checkClassNotExists(newClassName);
+			checkValidNewClass(newClassName);
 		}
 		if(newSuperclassName != null) {
 			checkClassExists(newSuperclassName);
@@ -222,8 +224,8 @@ public class Ontology {
 		return res;
 	}
 	
-	public void createRelationship(String relationship, String className1, String className2) throws ClassNotFoundOntologyException, RelationshipAlreadyExistsOntologyException {
-		checkRelationshipNotExists(relationship);
+	public void createRelationship(String relationship, String className1, String className2) throws ClassNotFoundOntologyException, RelationshipAlreadyExistsOntologyException, InvalidNameOntologyException {
+		checkValidNewRelationship(relationship);
 		checkClassExists(className1);
 		checkClassExists(className2);
 		OWLObjectProperty property = factory.getOWLObjectProperty(":#" + relationship, prefixManager);
@@ -237,7 +239,9 @@ public class Ontology {
 		manager.addAxiom(ontology, rangeAxiom);
 	}
 
-	private void checkRelationshipNotExists(String relationship) throws RelationshipAlreadyExistsOntologyException {
+	private void checkValidNewRelationship(String relationship) throws RelationshipAlreadyExistsOntologyException, InvalidNameOntologyException {
+		if(!isValidName(relationship))
+			throw new InvalidNameOntologyException(relationship);
 		if(ontology.containsObjectPropertyInSignature(IRI.create(documentIRI.toString() + "#" + relationship)))
 			throw new RelationshipAlreadyExistsOntologyException(relationship);
 	}
@@ -247,11 +251,11 @@ public class Ontology {
 			throw new RelationshipNotFoundOntologyException(relationship);
 	}
 	
-	public void alterRelationship(String relationship, String newRelationshipName, String className1, String className2) throws RelationshipNotFoundOntologyException, RelationshipAlreadyExistsOntologyException, ClassNotFoundOntologyException {
+	public void alterRelationship(String relationship, String newRelationshipName, String className1, String className2) throws RelationshipNotFoundOntologyException, RelationshipAlreadyExistsOntologyException, ClassNotFoundOntologyException, InvalidNameOntologyException {
 		// validar os parâmetros primeiro
 		checkRelationshipExists(relationship);
 		if(newRelationshipName != null)
-			checkRelationshipNotExists(newRelationshipName);
+			checkValidNewRelationship(newRelationshipName);
 		if(className1 != null)
 			checkClassExists(className1);
 		if(className2 != null)
@@ -332,13 +336,15 @@ public class Ontology {
 			throw new IndividualNotFoundOntologyException(individual);
 	}
 	
-	private void checkIndividualNotExists(String individual) throws IndividualAlreadyExistsOntologyException {
+	private void checkValidNewIndividual(String individual) throws IndividualAlreadyExistsOntologyException, InvalidNameOntologyException {
+		if(!isValidName(individual))
+			throw new InvalidNameOntologyException(individual);
 		if(ontology.containsIndividualInSignature(IRI.create(documentIRI.toString() + "#" + individual)))
 			throw new IndividualAlreadyExistsOntologyException(individual);
 	}
 	
-	public void createIndividual(String individualName, String className, List<IndividualRelationshipModel> relationships) throws IndividualAlreadyExistsOntologyException, ClassNotFoundOntologyException, RelationshipNotFoundOntologyException, IndividualNotFoundOntologyException {
-		checkIndividualNotExists(individualName);
+	public void createIndividual(String individualName, String className, List<IndividualRelationshipModel> relationships) throws IndividualAlreadyExistsOntologyException, ClassNotFoundOntologyException, RelationshipNotFoundOntologyException, IndividualNotFoundOntologyException, InvalidNameOntologyException {
+		checkValidNewIndividual(individualName);
 		checkClassExists(className);
 		checkValidIndividualRelationshipModels(relationships);
 		
@@ -370,10 +376,10 @@ public class Ontology {
 		}
 	}
 	
-	public void alterIndividual(String individualName, String newIndividualName, String newClassName, List<IndividualRelationshipModel> relationships) throws IndividualNotFoundOntologyException, IndividualAlreadyExistsOntologyException, ClassNotFoundOntologyException, RelationshipNotFoundOntologyException {
+	public void alterIndividual(String individualName, String newIndividualName, String newClassName, List<IndividualRelationshipModel> relationships) throws IndividualNotFoundOntologyException, IndividualAlreadyExistsOntologyException, ClassNotFoundOntologyException, RelationshipNotFoundOntologyException, InvalidNameOntologyException {
 		checkIndividualExists(individualName);
 		if(newIndividualName != null)
-			checkIndividualNotExists(newIndividualName);
+			checkValidNewIndividual(newIndividualName);
 		if(newClassName != null)
 			checkClassExists(newClassName);
 		if(relationships != null)
@@ -448,5 +454,9 @@ public class Ontology {
 		} finally {
 			vowlLock.unlock();
 		}
+	}
+	
+	private boolean isValidName(String name) {
+		return !name.contains(" ");
 	}
 }
