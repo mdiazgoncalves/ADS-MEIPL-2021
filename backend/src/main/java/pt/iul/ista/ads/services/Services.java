@@ -704,8 +704,9 @@ public class Services {
 			description = "Branch não existe",
 			content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	public Response getBranchVOWL(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, InterruptedException {
-		return Response.ok(GithubOperations.getBranchVowl(branch)).build();
+	public Response getBranchVOWL(@Parameter(description = "Nome do branch sobre o qual incide a operação") @PathParam("branch") String branch) throws IOException, BranchNotFoundException, OntologyException {
+		Ontology ontology = GithubOperations.readOntology(branch).getOntology();
+		return Response.ok(ontology.toVOWLString()).build();
 	}
 	
 	

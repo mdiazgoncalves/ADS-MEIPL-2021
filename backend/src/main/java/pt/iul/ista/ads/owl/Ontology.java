@@ -1,13 +1,21 @@
 package pt.iul.ista.ads.owl;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.AxiomType;
@@ -411,6 +419,34 @@ public class Ontology {
 			return res;
 		} catch(SQWRLException | SWRLParseException e) {
 			throw new OntologyException(e);
+		}
+	}
+	
+	private static ReentrantLock vowlLock = new ReentrantLock();
+	
+	public String toVOWLString() throws IOException {
+		vowlLock.lock();
+		try {
+			String owl = this.toString();
+			BufferedWriter writer;
+			String owlFilename = "knowledge-base.owl";
+			String vowlFilename = "knowledge-base.json";
+			writer = new BufferedWriter(new FileWriter(owlFilename));
+		    writer.write(owl);
+			writer.close();
+			Process process = Runtime.getRuntime().exec("java -jar owl2vowl.jar -file " + owlFilename);
+			BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			String s = null;
+			while ((s = stdInput.readLine()) != null) {
+			    System.out.println(s);
+			}
+			process.waitFor();
+			String vowl = new String(Files.readAllBytes(Paths.get(vowlFilename)));
+			return vowl;
+		} catch(InterruptedException e) {
+			throw new RuntimeException(e);
+		} finally {
+			vowlLock.unlock();
 		}
 	}
 }
