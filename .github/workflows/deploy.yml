@@ -1,11 +1,14 @@
-name: Deploy
+# This workflow will deploy to heroku,
+
+name: Deploy to Heroku
 
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -15,4 +18,3 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_app_name: "ADS-MEIPL-2021" #Must be unique in Heroku
           heroku_email: "mcdgs@iscte-iul.pt"
-          usedocker: true
