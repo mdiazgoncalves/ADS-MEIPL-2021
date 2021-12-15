@@ -9,6 +9,25 @@ on:
 
 jobs:
 
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x, 16.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm test
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -16,5 +35,5 @@ jobs:
       - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-          heroku_app_name: "ADS-MEIPL-2021" #Must be unique in Heroku
+          heroku_app_name: "ads-meipl-2021" #Must be unique in Heroku
           heroku_email: "mcdgs@iscte-iul.pt"
