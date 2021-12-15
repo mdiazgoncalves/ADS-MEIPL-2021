@@ -21,7 +21,7 @@ import pt.iul.ista.ads.models.ClassesResponseModel;
 import pt.iul.ista.ads.models.LatestCommitResponseModel;
 
 
-public class ServicesTests extends JerseyTest {
+public class ServicesTest extends JerseyTest {
 	
 	@Override
 	protected Application configure() {
