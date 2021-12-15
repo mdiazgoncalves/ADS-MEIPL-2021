@@ -20,7 +20,7 @@ jobs:
     - run: npm run test
       working-directory: frontend
 
-  build:
+  deploy-frontend:
     runs-on: ubuntu-latest
     needs: [test]
     steps:
@@ -38,3 +38,16 @@ jobs:
           heroku_email: "mcdgs@iscte-iul.pt"
           buildpack: "heroku/nodejs"
           appdir: "frontend"
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: "ads-meipl-2021-back" #Must be unique in Heroku
+          heroku_email: "mcdgs@iscte-iul.pt"
+          buildpack: "heroku/java"
+          appdir: "backend"
