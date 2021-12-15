@@ -36,4 +36,5 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_app_name: "ads-meipl-2021" #Must be unique in Heroku
           heroku_email: "mcdgs@iscte-iul.pt"
+          buildpack: "heroku/nodejs"
           appdir: "frontend"
