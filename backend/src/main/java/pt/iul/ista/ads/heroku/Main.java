@@ -1,6 +1,10 @@
 package pt.iul.ista.ads.heroku;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.EnumSet;
+import java.util.Properties;
 
 import javax.servlet.DispatcherType;
 
@@ -19,6 +23,8 @@ import io.swagger.v3.jaxrs2.integration.OpenApiServlet;
  */
 public class Main {
 
+	public static Properties properties;
+	
     public static void main(String[] args) throws Exception{
         // The port that we should run on can be set into an environment variable
         // Look for that variable and default to 8080 if it isn't there.
@@ -26,6 +32,8 @@ public class Main {
         if (webPort == null || webPort.isEmpty()) {
             webPort = "8080";
         }
+        
+        init();
         
         Server server = new Server(Integer.valueOf(webPort));
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -45,5 +53,10 @@ public class Main {
         
         server.start();
         server.join();
+    }
+    
+    public static void init() throws FileNotFoundException, IOException {
+        properties = new Properties();
+        properties.load(new FileInputStream("config.properties"));
     }
 }

@@ -23,6 +23,7 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import pt.iul.ista.ads.heroku.Main;
 import pt.iul.ista.ads.models.BranchResponseModel;
 import pt.iul.ista.ads.owl.Ontology;
 import pt.iul.ista.ads.owl.OntologyException;
@@ -30,9 +31,7 @@ import pt.iul.ista.ads.owl.OntologyException;
 public class GithubOperations extends GithubOperationsBase {
 
 	private static ConcurrentHashMap<String, ReentrantLock> locks = new ConcurrentHashMap<String, ReentrantLock>();
-	
-	private static final String owlPath = "knowledge-base.owl";
-	
+		
 	// retorna hash do commit efetuado
 	public static String editOntology(String branch, String commit, boolean isCurator, OntologyEditorCallback callback) throws OldCommitException, IOException, OntologyException, InvalidBranchException, BranchNotFoundException {
 		if(!isValidBranch(branch) && !isCurator)
@@ -52,7 +51,7 @@ public class GithubOperations extends GithubOperationsBase {
 			String newOwl = ontology.toString();
 			GHContentUpdateResponse res = getGHRepository().createContent()
 				.branch(branch)
-				.path(owlPath)
+				.path(Main.properties.getProperty("githubOwlPath"))
 				.content(newOwl)
 				.message("User update through the application")
 				.sha(getOWLResponse.sha)
@@ -107,7 +106,7 @@ public class GithubOperations extends GithubOperationsBase {
 			GHTree tree = getGHRepository().getTree(branch);
 			GHBlob owlBlob = null;
 			for(GHTreeEntry entry : tree.getTree())
-				if(entry.getPath().equals(owlPath))
+				if(entry.getPath().equals(Main.properties.getProperty("githubOwlPath")))
 					owlBlob = entry.asBlob();
 			String owl = new String(Base64.getMimeDecoder().decode(owlBlob.getContent()));
 	
@@ -125,7 +124,7 @@ public class GithubOperations extends GithubOperationsBase {
 			GHTree tree = getGHRepository().getTree(branch);
 			GHBlob owlBlob = null;
 			for(GHTreeEntry entry : tree.getTree())
-				if(entry.getPath().equals(owlPath))
+				if(entry.getPath().equals(Main.properties.getProperty("githubOwlPath")))
 					owlBlob = entry.asBlob();
 			return owlBlob.getSha();
 		} catch(GHFileNotFoundException e) {
@@ -158,7 +157,7 @@ public class GithubOperations extends GithubOperationsBase {
 		String authorizationHeader = "Bearer " + getGithubAccessToken();
 
 		Request request = new Request.Builder()
-				.url("https://api.github.com/repos/ads-meipl/knowledge-base/commits/" + branch)
+				.url("https://api.github.com/repos/" + Main.properties.getProperty("githubRepository") + "/commits/" + branch)
 				.addHeader("Authorization", authorizationHeader)
 				.build();
 		Call call = client.newCall(request);
@@ -206,7 +205,7 @@ public class GithubOperations extends GithubOperationsBase {
 		
 		RequestBody requestBody = RequestBody.create(body, MediaType.parse("application/json"));
 		Request request = new Request.Builder()
-				.url("https://api.github.com/repos/ads-meipl/knowledge-base/git/refs")
+				.url("https://api.github.com/repos/" + Main.properties.getProperty("githubRepository") + "/git/refs")
 				.addHeader("Authorization", authorizationHeader)
 				.post(requestBody)
 				.build();
@@ -287,7 +286,7 @@ public class GithubOperations extends GithubOperationsBase {
 	private static void deleteBranchImpl(String branchName) throws IOException {		
 		String authorizationHeader = "Bearer " + getGithubAccessToken();
 		Request request = new Request.Builder()
-				.url("https://api.github.com/repos/ads-meipl/knowledge-base/git/refs/heads/" + branchName)
+				.url("https://api.github.com/repos/" + Main.properties.getProperty("githubRepository") + "/git/refs/heads/" + branchName)
 				.addHeader("Authorization", authorizationHeader)
 				.delete()
 				.build();
@@ -307,7 +306,7 @@ public class GithubOperations extends GithubOperationsBase {
 			String owlSha = getOWLSha(getDefaultBranch());
 			getGHRepository().createContent()
 					.branch(getDefaultBranch())
-					.path(owlPath)
+					.path(Main.properties.getProperty("githubOwlPath"))
 					.content(owl)
 					.message("Merge branch " + branchName)
 					.sha(owlSha)

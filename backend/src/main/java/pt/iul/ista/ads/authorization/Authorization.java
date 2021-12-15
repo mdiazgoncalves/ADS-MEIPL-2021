@@ -9,6 +9,7 @@ import io.fusionauth.jwt.Verifier;
 import io.fusionauth.jwt.domain.JWT;
 import io.fusionauth.jwt.rsa.RSASigner;
 import io.fusionauth.jwt.rsa.RSAVerifier;
+import pt.iul.ista.ads.heroku.Main;
 import pt.iul.ista.ads.utils.Utils;
 
 public class Authorization {
@@ -20,11 +21,7 @@ public class Authorization {
 	private static Signer signer;
 	
 	private static Verifier verifier;
-	
-	public static String curatorIssuer = "curator";
-	
-	private static final String curatorPassword = "banana";
-	
+
 	static {
 		try {
 			signer = RSASigner.newSHA256Signer(Utils.resourceToString(privateKeyFilename));
@@ -35,11 +32,11 @@ public class Authorization {
 	}
 	
 	public static String generateToken(String password) throws UnauthorizedException {
-		if(!password.equals(curatorPassword))
+		if(!password.equals(Main.properties.getProperty("curatorPassword")))
 			throw new UnauthorizedException();
 		
 		JWT jwt = new JWT()
-				.setIssuer(curatorIssuer)
+				.setIssuer(Main.properties.getProperty("curatorIssuer"))
                 .setIssuedAt(ZonedDateTime.now(ZoneOffset.UTC))
                 .setExpiration(ZonedDateTime.now(ZoneOffset.UTC).plusHours(24));
 		return JWT.getEncoder().encode(jwt, signer);
@@ -54,7 +51,7 @@ public class Authorization {
 		if(token == null)
 			return false;
 		JWT jwt = JWT.getDecoder().decode(token, verifier);
-		return jwt.issuer.equals(curatorIssuer) && !jwt.isExpired();
+		return jwt.issuer.equals(Main.properties.getProperty("curatorIssuer")) && !jwt.isExpired();
 			
 	}
 }

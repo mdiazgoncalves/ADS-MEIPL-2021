@@ -16,6 +16,7 @@ import pt.iul.ista.ads.github.BranchNotFoundException;
 import pt.iul.ista.ads.github.GithubOperations;
 import pt.iul.ista.ads.github.InvalidBranchException;
 import pt.iul.ista.ads.github.OldCommitException;
+import pt.iul.ista.ads.heroku.Main;
 import pt.iul.ista.ads.models.ClassesResponseModel;
 import pt.iul.ista.ads.models.LatestCommitResponseModel;
 
@@ -24,6 +25,11 @@ public class ServicesTests extends JerseyTest {
 	
 	@Override
 	protected Application configure() {
+		try {
+			Main.init();
+		} catch(Exception e) {
+			throw new RuntimeException(e);
+		}
 		ResourceConfig resourceConfig = new ResourceConfig();
 		resourceConfig.packages("pt.iul.ista.ads.services", "pt.iul.ista.ads.exceptionmappers");
 		return resourceConfig;

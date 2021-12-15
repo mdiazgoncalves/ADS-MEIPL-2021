@@ -20,12 +20,12 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import pt.iul.ista.ads.heroku.Main;
 import pt.iul.ista.ads.utils.Utils;
 
 class GithubOperationsBase {
 
 	private static final String keyFilename = "ads-meipl.2021-11-18.private-key.pem";
-	private static final String appId = "152903";
 	private static final int maxJWTDurationMinutes = 10;
 	private static final String githubApiUrl = "https://api.github.com/integration/installations";
 	
@@ -89,7 +89,7 @@ class GithubOperationsBase {
 			token_expires_at = ZonedDateTime.parse(responseObject.get("expires_at").getAsString());
 			
 			GitHub github = new GitHubBuilder().withAppInstallationToken(token).build();
-			repository = github.getRepository("ads-meipl/knowledge-base");
+			repository = github.getRepository(Main.properties.getProperty("githubRepository"));
 			
 		} catch(IOException e) {
 			throw new RuntimeException(e);
@@ -100,7 +100,7 @@ class GithubOperationsBase {
 		String keyFileContent = Utils.resourceToString(keyFilename);
 		Signer signer = RSASigner.newSHA256Signer(keyFileContent);
 		JWT jwt = new JWT()
-				.setIssuer(appId)
+				.setIssuer(Main.properties.getProperty("githubAppId"))
                 .setIssuedAt(ZonedDateTime.now(ZoneOffset.UTC))
                 .setExpiration(ZonedDateTime.now(ZoneOffset.UTC).plusMinutes(maxJWTDurationMinutes));
 		return JWT.getEncoder().encode(jwt, signer);
