@@ -3,6 +3,7 @@
     <header>
       <h2>{{ _class.className }}</h2>
       <div v-if="editing" class="delete" @click="onDelete(_class.className)">&cross;</div>
+      <div v-if="editing" class="update" @click="onUpdate(_class.className)">U</div>
     </header>
     <hr/>
     <div v-if="_class.superClass" class="card-superclass">
@@ -50,9 +51,14 @@ export default {
     const onDelete = async (className) => {
       await emit('delete', className)
     }
+    const onUpdate = async (className) => {
+      await emit('update', className)
+    }
+
     return {
       editing: computed(() => store.getters.branch),
       onDelete,
+      onUpdate
     }
   }
 }
@@ -94,6 +100,20 @@ export default {
 }
 
 .delete:hover {
+  cursor: pointer;
+  color: #f1f1f1;
+  background-color: #c93b3b;
+}
+
+.update {
+  color: #d2d2d2;
+  background-color: #f1f1f1;
+  border-radius: 16px;
+  padding: 0 8px;
+  margin-left: 8px;
+}
+
+.update:hover {
   cursor: pointer;
   color: #f1f1f1;
   background-color: #c93b3b;
