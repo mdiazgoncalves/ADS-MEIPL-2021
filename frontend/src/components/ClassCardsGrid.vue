@@ -2,8 +2,8 @@
   <section id="class-cards">
     <div class="grid-container">
       <ClassCard v-for="(_class, index) in classes" :key="index" :_class="_class" @delete="onDelete" />
-      <ClassCardAdd v-if="isEditing && !isLoading" :classes="classes" @add="onAdd"></ClassCardAdd>
-      <ClassCardEdit v-if="isEditing && !isLoading" :classes="classes" @update="onUpdate"></ClassCardEdit>
+      <ClassCardAdd v-if="isEditing && !isLoading" :classes="classes" @add="onAdd"></ClassCardAdd>      
+      <ClassCardEdit v-if="isEditing && !isLoading" :classes="classes" @update="onUpdate"></ClassCardEdit>    
     </div>
   </section>
 </template>

@@ -14,11 +14,13 @@
     </header>
     <hr/>
     <div class="card-superclass">
-           <input v-model="newClassName" name="className" placeholder="New class name"/>
-
+           <input v-model="newClassName" name="className" placeholder="New Class name"/>
+    </div>
+      <div class="card-superclass">     
+           <input v-model="superClassName" name="superClassName" placeholder="New SuperClass name"/>
     </div>
     <div>
-      <button class="primary save-new-class" @click="onUpdate(className, superClass)">Update class</button>
+      <button class="primary save-new-class" @click="onUpdate(className, superClassName, newClassName)">Update class</button>
     </div>
   </div>
 </template>
@@ -31,19 +33,19 @@ export default {
   props: {
     classes: {type: Array, required: true},
   },
-  emits: ["edit"],
+  emits: ["update"],
   setup(props, {emit}) {
     const {classes} = toRefs(props)
     const className = ref("")
-    const superClass = ref("")
+    const superClassName = ref("")
     const newClassName = ref("")
 
-    const onUpdate = async (className, superClass, newClassName) => {
-      await emit("edit", {'className': className, 'superClass': superClass, 'newClassName': newClassName});
+    const onUpdate = async (className, superClassName, newClassName) => {
+      await emit("update", {'className': className, 'superClassName': superClassName, 'newClassName': newClassName});
     }
     return {
       className,
-      superClass,
+      superClassName,
       classes,
       onUpdate,
       newClassName

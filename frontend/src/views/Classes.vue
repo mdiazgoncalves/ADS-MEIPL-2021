@@ -78,14 +78,18 @@ export default {
       await store.dispatch('setLoading', {loadingId: 600, isLoading: false});
     }
 
-    const updateClass = async ({className, superClass, newClassName}) => {
+    const updateClass = async ({className, superClassName, newClassName}) => {
       await store.dispatch('setLoading', {loadingText: `Update class ${className}…`, loadingId: 600, isLoading: true});
       try {
         let endpoint = `${process.env.VUE_APP_BACKEND}/class/${className}?branch=${store.getters.branch}&commit=${store.getters.commit}`
+
         if(store.getters.branch === "main") {
           endpoint += `&token=${store.getters.token}`
         }
-        const response = await axios.put(endpoint, {superClassName: superClass === undefined || superClass.length === 0 ? null : superClass})
+        
+        const response = await axios.put(endpoint, 
+          {newSuperClass: superClassName === undefined || superClassName.length === 0 ? null : superClassName, 
+          newClassName: newClassName === undefined || newClassName.length === 0 ? null : newClassName})
         console.log(response)
         await fetchClasses(store.getters.branch)
       } catch (e) {
