@@ -4,10 +4,8 @@ name: Deploy to Heroku
 
 on:
   push:
-    # branches:
-    #   - main
-    tags:
-      - *_heroku
+      tags:
+        - '*_heroku'
 
 jobs:
 
