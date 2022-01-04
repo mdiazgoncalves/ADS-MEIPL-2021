@@ -1,6 +1,6 @@
 # This workflow will deploy to docker,
 
-name: Deploy to Heroku
+name: Deploy to Docker Hub
 
 on:
   push:
