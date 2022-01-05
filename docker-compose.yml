@@ -4,8 +4,10 @@ services:
     image: mcdgs/ads-g10-meipl-2021-back
     container_name: backend
     restart: always
+    ports:
+      - '8080:8080'
     networks:
-      - back
+      - backend
   frontend:
     image: mcdgs/ads-g10-meipl-2021-front
     container_name: frontend
@@ -13,8 +15,8 @@ services:
     depends_on:
       - backend
     ports:
-      - '8080:8080'
+      - '8088:8080'
     networks:
-      - back
+      - backend
 networks:
-  back:
+  backend:
