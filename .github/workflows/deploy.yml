@@ -6,6 +6,7 @@ on:
   push:
       tags:
         - '*_heroku'
+  workflow_dispatch:
 
 jobs:
 
