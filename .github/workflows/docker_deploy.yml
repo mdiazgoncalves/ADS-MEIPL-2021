@@ -76,7 +76,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: /frontend
+          context: frontend
           file: Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/ads-g10-2021:latest
