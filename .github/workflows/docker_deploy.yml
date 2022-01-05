@@ -81,12 +81,12 @@ jobs:
         with:
           context: ./frontend/
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ads-g10-2021:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ads-g10-meipl-2021-front:latest
         
       - name: Run the image in a container
         uses: addnab/docker-run-action@v3
         with:
-          image: ${{ secrets.DOCKERHUB_USERNAME }}/ads-g10-2021:latest
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/ads-g10-meipl-2021-front:latest
           run: |
             echo "runing the docker image"
             echo "Testing the nodejs  app endpoints"
