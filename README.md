@@ -1,6 +1,6 @@
-[![Deploy to Heroku](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy.yml)
+[![Deploy to Heroku](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_heroku.yml/badge.svg)](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_heroku.yml)
 
-[![Deploy to Docker Hub](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/docker_deploy.yml/badge.svg?branch=main)](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/docker_deploy.yml)
+[![Deploy to Docker Hub](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_docker.yml/badge.svg)](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_docker.yml)
 
 # ADS-MEIPL-2021
 
