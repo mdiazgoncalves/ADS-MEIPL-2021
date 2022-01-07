@@ -4,8 +4,8 @@ name: Deploy to Heroku
 
 on:
   push:
-      tags:
-        - '*_heroku'
+    tags:
+      - '*'
   workflow_dispatch:
 
 jobs:
