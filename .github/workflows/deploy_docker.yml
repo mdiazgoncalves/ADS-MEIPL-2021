@@ -4,8 +4,8 @@ name: Deploy to Docker Hub
 
 on:
   push:
-      tags:
-        - '*_docker'
+    tags:
+      - '*'
   workflow_dispatch:
 
 jobs:
