@@ -1,6 +1,10 @@
-[![Deploy to Heroku](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_heroku.yml/badge.svg)](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_heroku.yml)
+[![Backend Docker](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_backend_docker.yml/badge.svg)](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_backend_docker.yml)
 
-[![Deploy to Docker Hub](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_docker.yml/badge.svg)](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_docker.yml)
+[![Backend Heroku](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_backend_heroku.yml/badge.svg)](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_backend_heroku.yml)
+
+[![Frontend Docker](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_frontend_docker.yml/badge.svg)](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_frontend_docker.yml)
+
+[![Frontend Heroku](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_frontend_heroku.yml/badge.svg)](https://github.com/mdiazgoncalves/ADS-MEIPL-2021/actions/workflows/deploy_frontend_heroku.yml)
 
 # ADS-MEIPL-2021
 
