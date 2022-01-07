@@ -14,10 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
     - name: Run frontend tests
       uses: actions/setup-node@v2
+
     - run: npm install
       working-directory: frontend
+
     - run: npm run test
       working-directory: frontend
 
@@ -26,16 +29,19 @@ jobs:
     needs: [frontend-test]
     steps:
       - uses: actions/checkout@v2
+
       - run: npm install
         working-directory: frontend
+
       - run: npm run build
         working-directory: frontend
+
       - run: npm install express serve-static --save
         working-directory: frontend
+
       - name: checkout repo
         uses: actions/checkout@v2
 
-      # NEW -----------------------------------------
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
     
