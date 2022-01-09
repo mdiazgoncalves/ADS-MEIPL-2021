@@ -1,5 +1,5 @@
 <template>
-  <ClassCardsGrid :classes="classes" @delete="deleteClass" @add="addClass"/>
+  <ClassCardsGrid :classes="classes" @delete="deleteClass" @add="addClass" @update="updateClass"/>
 </template>
 
 <script>
@@ -78,10 +78,31 @@ export default {
       await store.dispatch('setLoading', {loadingId: 600, isLoading: false});
     }
 
+    const updateClass = async ({className, superClassName, newClassName}) => {
+      await store.dispatch('setLoading', {loadingText: `Update class ${className}…`, loadingId: 600, isLoading: true});
+      try {
+        let endpoint = `${process.env.VUE_APP_BACKEND}/class/${className}?branch=${store.getters.branch}&commit=${store.getters.commit}`
+
+        if(store.getters.branch === "main") {
+          endpoint += `&token=${store.getters.token}`
+        }
+        
+        const response = await axios.put(endpoint, 
+          {newSuperClass: superClassName === undefined || superClassName.length === 0 ? null : superClassName, 
+          newClassName: newClassName === undefined || newClassName.length === 0 ? null : newClassName})
+        console.log(response)
+        await fetchClasses(store.getters.branch)
+      } catch (e) {
+        //
+      }
+      await store.dispatch('setLoading', {loadingId: 600, isLoading: false});
+    }
+
     return {
       classes,
       deleteClass,
       addClass,
+      updateClass
     }
   },
 }

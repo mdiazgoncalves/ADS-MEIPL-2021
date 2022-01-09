@@ -1,10 +1,13 @@
+# build Maven stage
 FROM maven:3.8.4-jdk-8 AS build
 
 ADD /src /src
 ADD pom.xml .
+
 RUN mvn package -Dmaven.test.skip=true -Dmaven.javadoc.skip=true
 
 
+# build Java stage
 FROM openjdk:8-jre
 
 RUN mkdir app

@@ -41,6 +41,26 @@
         <button class="primary save-new-relationship" @click="addRelationship()">Add relationship</button>
       </div>
     </div>
+    <div v-if="editing && !isLoading" class="card">
+      <header>
+        <input v-model="oldRelationship" name="typeRelationship" placeholder="Relationship to update"/>
+        <input v-model="updateRelationshipName" name="updateRelationship" placeholder="New relationship name"/>
+      </header>
+      <hr/>
+      <div>
+        <p class="title">Classes:</p>
+        <ul class="classes">
+          <li class="class">
+            <input v-model="updateRelationshipClass1" type="text" name="newRelationshipClass1" placeholder="Left class" list="classes" autocomplete="off"/>
+            <input v-model="updateRelationshipClass2" type="text" name="newRelationshipClass2" placeholder="Right class" list="classes" autocomplete="off"/>
+          </li>
+        </ul>
+
+      </div>
+      <div>
+        <button class="primary save-new-relationship" @click="updateRelationship()">Update relationship</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -58,8 +78,12 @@ export default {
     const classes = ref([]);
     const route = useRoute()
     const newRelationship = ref("");
+    const oldRelationship = ref("");
     const newRelationshipClass1 = ref("");
     const newRelationshipClass2 = ref("");
+    const updateRelationshipName = ref("");
+    const updateRelationshipClass1 = ref("");
+    const updateRelationshipClass2 = ref("");
 
     const fetchRelationships = async () => {
       relationships.value = []
@@ -143,15 +167,41 @@ export default {
       await store.dispatch('setLoading', {loadingId: 1700, isLoading: false});
     }
 
+    const updateRelationship = async () => {
+      await store.dispatch('setLoading', {loadingText: `Adding relationship ${oldRelationship.value}…`, loadingId: 1700, isLoading: true});
+      try {
+        let endpoint = `${process.env.VUE_APP_BACKEND}/relationship/${oldRelationship.value}?branch=${store.getters.branch}&commit=${store.getters.commit}`
+        if(store.getters.branch === "main") {
+          endpoint += `&token=${store.getters.token}`
+        }
+        const response = await axios.put(endpoint, {newRelationshipName: updateRelationshipName.value, className1: updateRelationshipClass1.value, 
+          className2: updateRelationshipClass2.value})
+        console.log(response)
+        oldRelationship.value = "";
+        updateRelationshipName.value = "";
+        updateRelationshipClass1.value = "";
+        updateRelationshipClass2.value = "";
+        await fetchRelationships()
+      } catch (e) {
+        //
+      }
+      await store.dispatch('setLoading', {loadingId: 1700, isLoading: false});
+    }
+
     return {
       relationships,
       editing: computed(() => store.getters.branch),
       isLoading: computed(() => store.getters.isLoading),
       onDelete,
       addRelationship,
-      newRelationship,
+      updateRelationship,
+      updateRelationshipName,
       newRelationshipClass1,
       newRelationshipClass2,
+      newRelationship,
+      updateRelationshipClass1,
+      updateRelationshipClass2,
+      oldRelationship,
       classes,
     }
   }

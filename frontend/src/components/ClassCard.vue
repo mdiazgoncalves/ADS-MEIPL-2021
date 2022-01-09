@@ -50,9 +50,10 @@ export default {
     const onDelete = async (className) => {
       await emit('delete', className)
     }
+
     return {
       editing: computed(() => store.getters.branch),
-      onDelete,
+      onDelete
     }
   }
 }

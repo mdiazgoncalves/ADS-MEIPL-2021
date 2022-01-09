@@ -2,7 +2,8 @@
   <section id="class-cards">
     <div class="grid-container">
       <ClassCard v-for="(_class, index) in classes" :key="index" :_class="_class" @delete="onDelete" />
-      <ClassCardAdd v-if="isEditing && !isLoading" :classes="classes" @add="onAdd"></ClassCardAdd>
+      <ClassCardAdd v-if="isEditing && !isLoading" :classes="classes" @add="onAdd"></ClassCardAdd>      
+      <ClassCardEdit v-if="isEditing && !isLoading" :classes="classes" @update="onUpdate"></ClassCardEdit>    
     </div>
   </section>
 </template>
@@ -12,15 +13,17 @@ import ClassCard from "@/components/ClassCard";
 import {computed, toRefs} from "vue";
 import {useStore} from "vuex";
 import ClassCardAdd from "@/components/ClassCardAdd";
+import ClassCardEdit from "@/components/ClassCardEdit";
 
 export default {
   name: "ClassCardsGrid",
   props: {
     classes: Array,
   },
-  emits: ['delete', 'add'],
+  emits: ['delete', 'add', 'update'],
   components: {
     ClassCardAdd,
+    ClassCardEdit,
     ClassCard,
   },
   setup(props, { emit }) {
@@ -32,12 +35,16 @@ export default {
     const onAdd = async(payload) => {
       await emit("add", payload);
     }
+    const onUpdate = async(className, newClassName) => {
+      await emit("update", className, newClassName);
+    }
     return {
       classes,
       isEditing: computed(() => store.getters.branch != null),
       isLoading: computed(() => store.getters.isLoading),
       onDelete,
       onAdd,
+      onUpdate
     }
   }
 }
