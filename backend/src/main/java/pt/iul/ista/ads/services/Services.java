@@ -1,6 +1,7 @@
 package pt.iul.ista.ads.services;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -471,20 +472,26 @@ public class Services {
 	@POST
 	@Operation(tags = {"Query"},
 		summary = "Executar query",
-		description = "Executa query e retorna lista de indivíduos",
+		description = "Executa queries e retorna, para cada query, o nome da variável selecionada + lista de entidades resultantes da query",
 		responses = {@ApiResponse(responseCode = "200",
 				description = "OK",
-				content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class))))})
+				content = @Content(schema = @Schema(implementation = QueryResponseModel.class))),
+				@ApiResponse(responseCode = "404",
+				description = "Branch não existe",
+				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class))),
+				@ApiResponse(responseCode = "400",
+				description = "Query inválida",
+				content = @Content(schema = @Schema(implementation = ErrorResponseModel.class)))})
 	@Produces("application/json")
-	@Consumes("text/plain")
+	@Consumes("application/json")
 	public Response query(@Parameter(description = "Nome do branch sobre o qual incide a operação", required = true) @QueryParam("branch") String branch,
-			@Parameter(description = "Query", required = true) String query) throws IOException, OntologyException, BranchNotFoundException {
-		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch); 
+			@Parameter(description = "Query", required = true) List<String> queries) throws IOException, OntologyException, BranchNotFoundException {
+		ReadOntologyResponse readOntologyResponse = GithubOperations.readOntology(branch);
 		Ontology ontology = readOntologyResponse.getOntology();
 		QueryResponseModel res = new QueryResponseModel();
 		res.setBranch(branch);
 		res.setLatestCommit(readOntologyResponse.getLatestCommit());
-		res.setData(ontology.query(query));
+		res.setData(ontology.query(queries));
 		return Response.ok(res).build();
 	}
 	

@@ -16,6 +16,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.AxiomType;
@@ -50,6 +52,7 @@ import pt.iul.ista.ads.models.ClassDetailResponseModel;
 import pt.iul.ista.ads.models.ClassesResponseModel;
 import pt.iul.ista.ads.models.IndividualModel;
 import pt.iul.ista.ads.models.IndividualRelationshipModel;
+import pt.iul.ista.ads.models.QueryResponseModel;
 import pt.iul.ista.ads.models.RelationshipDetailResponseModel;
 import pt.iul.ista.ads.models.RelationshipsResponseModel;
 
@@ -412,20 +415,36 @@ public class Ontology {
 		manager.applyChanges(remover.getChanges());
 	}
 	
-	public List<String> query(String query) throws OntologyException {
+	public List<QueryResponseModel.QueryResponse> query(List<String> queries) throws OntologyException {
 		try {
+			List<QueryResponseModel.QueryResponse> res = new ArrayList<QueryResponseModel.QueryResponse>();
 			SQWRLQueryEngine queryEngine = SWRLAPIFactory.createSQWRLQueryEngine(ontology);
-			SQWRLResult queryResult = queryEngine.runSQWRLQuery("q1", query);
-			List<String> res = new ArrayList<String>();
-			for(SQWRLResultValue value : queryResult.getColumn(0)) {
-				String qualifiedName = value.toString();
-				String shortName = qualifiedName.substring(qualifiedName.indexOf(":") + 1);
-				res.add(shortName);
+			for(String query : queries) {
+				String variableName = extractVariableNameFromQuery(query);
+				SQWRLResult queryResult = queryEngine.runSQWRLQuery("q1", query);
+				List<String> results = new ArrayList<String>();
+				for(SQWRLResultValue value : queryResult.getColumn(0)) {
+					String qualifiedName = value.toString();
+					String shortName = qualifiedName.substring(qualifiedName.indexOf(":") + 1);
+					results.add(shortName);
+				}
+				QueryResponseModel.QueryResponse queryResponse = new QueryResponseModel.QueryResponse();
+				queryResponse.setVariableName(variableName);
+				queryResponse.setResults(results);
+				res.add(queryResponse);
 			}
 			return res;
 		} catch(SQWRLException | SWRLParseException e) {
 			throw new OntologyException(e);
 		}
+	}
+	
+	private String extractVariableNameFromQuery(String query) throws InvalidQueryOntologyException {
+		Pattern p = Pattern.compile("sqwrl:select\\(\\?(.+)\\)");
+		Matcher m = p.matcher(query);
+		if(!m.find())
+			throw new InvalidQueryOntologyException(query);
+		return m.group(1);
 	}
 	
 	private static ReentrantLock vowlLock = new ReentrantLock();
