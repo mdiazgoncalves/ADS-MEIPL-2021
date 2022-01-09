@@ -27,6 +27,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
     
@@ -47,7 +50,9 @@ jobs:
         with:
           context: ./backend/
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ads-g10-meipl-2021-back:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/ads-g10-meipl-2021-back:${{ env.RELEASE_VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/ads-g10-meipl-2021-back:latest
         
       - name: Run the image in a container
         uses: addnab/docker-run-action@v3
