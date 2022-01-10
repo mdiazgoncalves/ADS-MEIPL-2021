@@ -1,11 +1,11 @@
-# This workflow will deploy frontend to heroku,
+# This workflow will deploy frontend to Heroku
 
 name: Frontend Deploy to Heroku
 
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
   workflow_dispatch:
 
 jobs:

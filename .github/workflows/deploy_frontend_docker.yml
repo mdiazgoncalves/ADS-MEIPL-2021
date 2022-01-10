@@ -1,11 +1,11 @@
-# This workflow will deploy frontend to docker hub.
+# This workflow will deploy frontend to Docker Hub
 
 name: Frontend Deploy to Docker Hub
 
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
   workflow_dispatch:
 
 jobs:

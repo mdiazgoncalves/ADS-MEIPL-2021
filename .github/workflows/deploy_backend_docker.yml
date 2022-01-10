@@ -1,11 +1,11 @@
-# This workflow will deploy backend to docker hub,
+# This workflow will deploy backend to Docker Hub
 
 name: Backend Deploy to Docker Hub
 
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
   workflow_dispatch:
 
 jobs:

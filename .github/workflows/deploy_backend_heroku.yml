@@ -1,11 +1,11 @@
-# This workflow will deploy backend to heroku,
+# This workflow will deploy backend to Heroku
 
 name: Backend Deploy to Heroku
 
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
   workflow_dispatch:
 
 jobs:
