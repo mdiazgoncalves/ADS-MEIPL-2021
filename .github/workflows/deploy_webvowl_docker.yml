@@ -1,0 +1,50 @@
+# This workflow will deploy WebVOWL to Docker Hub
+
+name: WebVOWL Deploy to Docker Hub
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+
+  webvowl-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - run: npm install
+        working-directory: WebVOWL
+      - run: npm run-script release
+        working-directory: WebVOWL
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./WebVOWL/
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/ads-g10-meipl-2021-webvowl:${{ env.RELEASE_VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/ads-g10-meipl-2021-webvowl:latest
+      - name: Run the image in a container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/ads-g10-meipl-2021-webvowl:latest
+          run: |
+            echo "runing the docker image"
+            echo "Testing the nodejs app endpoints"
+            echo ${{ steps.docker_build.outputs.digest }}

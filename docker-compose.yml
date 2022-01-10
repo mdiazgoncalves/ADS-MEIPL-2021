@@ -1,7 +1,7 @@
 version: '3'
 services:
   backend:
-    image: mcdgs/ads-g10-meipl-2021-back
+    image: mcdgs/ads-g10-meipl-2021-back:latest
     container_name: backend
     restart: always
     ports:
@@ -9,7 +9,7 @@ services:
     networks:
       - backend
   frontend:
-    image: mcdgs/ads-g10-meipl-2021-front
+    image: mcdgs/ads-g10-meipl-2021-front:latest
     container_name: frontend
     restart: always
     depends_on:
