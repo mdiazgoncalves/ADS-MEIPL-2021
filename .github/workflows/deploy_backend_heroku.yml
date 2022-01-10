@@ -19,7 +19,7 @@ jobs:
           java-version: 8
       - name: Run backend tests
         working-directory: backend
-        run: mvn test --file pom.xml
+        run: mvn test -e --file pom.xml
 
   backend-deploy:
     runs-on: ubuntu-latest
