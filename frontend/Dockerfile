@@ -20,4 +20,5 @@ COPY .env_docker .env
 RUN npm run build
 
 EXPOSE 8080
-CMD [ "http-server", "dist" ]
+# CMD [ "http-server", "dist" ]
+CMD [ "node", "server.js" ]
