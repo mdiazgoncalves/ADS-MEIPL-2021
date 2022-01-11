@@ -8,9 +8,13 @@ FROM tomcat:9-jre8-alpine
 # Build time arguments (WebVOWL version)
 ARG version=1.1.7
 
-# Download WebVOWL to tomcat webapps directory as root app
-RUN rm -rf /usr/local/tomcat/webapps/* && \
-    wget -O /usr/local/tomcat/webapps/ROOT.war http://downloads.visualdataweb.de/webvowl_${version}.war
+COPY .env_docker .env
 
+# Download WebVOWL to tomcat webapps directory as root app
+RUN rm -rf /usr/local/tomcat/webapps/*
+    
+COPY webvowl_${version}.war /usr/local/tomcat/webapps/ROOT.war
+
+EXPOSE 8080
 # Run default server
 CMD ["catalina.sh", "run"]
