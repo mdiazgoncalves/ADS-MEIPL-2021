@@ -99,6 +99,20 @@ button.primary-outline:hover, input[type=button].primary-outline:hover, input[ty
   border: none;
 }
 
+button.white, input[type=button].white, input[type=submit].white {
+  border: solid 1px #4b4b4b;
+  background-color: white;
+  color: #4b4b4b;
+  font-size: 14px;
+  border-radius: 4px;
+}
+
+button.white:hover, input[type=button].white:hover, input[type=submit].white:hover {
+  border: solid 1px #4b4b4b;
+  background-color: #e8e8e8;
+  color: #4b4b4b;
+}
+
 button.primary, input[type=button].primary, input[type=submit].primary {
   background-color: var(--primary);
   color: white;
@@ -202,13 +216,22 @@ h2 {
   }
 }
 
-input {
+input, select {
   height: 40px;
   border: 1px solid #9b9b9b;
   border-radius: 4px;
   box-sizing: border-box;
   padding: 0 16px;
   font-size: 15px;
+}
+
+input[type=checkbox] {
+  height: 32px;
+  width: 32px;
+}
+
+select {
+  width: 200px;
 }
 
 :focus-visible {
@@ -229,6 +252,24 @@ input {
 .slide-fade-leave-to {
   transform: translateX(-10px);
   opacity: 0;
+}
+
+.delete {
+  color: #c93b3b;
+  background-color: #f1f1f1;
+  border-radius: 16px;
+  padding: 0 8px;
+  margin-left: 8px;
+}
+
+.delete:hover {
+  cursor: pointer;
+  color: #f1f1f1;
+  background-color: #c93b3b;
+}
+
+.capitalize-first-letter:first-letter {
+  text-transform:capitalize;
 }
 
 header {

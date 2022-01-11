@@ -1,60 +1,39 @@
 <template>
   <section id="queries-page">
     <div class="filter">
-<!--      <h2>Query Filters:</h2>-->
-      <form class="simple-filter" @submit.prevent="computeAndExecute()">
-        <div class="query-section">
-          <h2>Query By Class:</h2>
-          <div class="simple-filter-fields">
-            <input name="className" placeholder="Class Name" v-model="className" autocomplete="off" list="classes">
-            <datalist id="classes">
-              <option v-for="cls in classes" :key="cls.className">{{ cls.className }}</option>
-            </datalist>
-          </div>
-        </div>
-        <div class="query-section">
-          <h2>Query By Relationship:</h2>
-          <div class="simple-filter-fields">
-            <div class="side-fields">
-              <input placeholder="Relationship Name" v-model="relationship" autocomplete="off" list="relationships">
-              <datalist id="relationships">
-                <option v-for="relationship in relationships.filter(it => it.className1 === className)"
-                        :key="relationship.name">{{ relationship.name }}
-                </option>
-              </datalist>
-              <input placeholder="Individual Name" v-model="individual" autocomplete="off" list="individuals">
-              <datalist id="individuals">
-                <option
-                    v-for="individual in individuals.filter(it => it.className === relationships.find(r => r.name === relationship.relationshipName)?.className2)"
-                    :key="individual.individualName">{{ individual.individualName }}
-                </option>
-              </datalist>
-            </div>
-          </div>
-        </div>
+      <form @submit.prevent="computeAndExecute()">
+        <Variable v-for="(variable, index) in variables" :key="index" :variable="variable"
+                  @changeVar="result => change(index, result)" @reset="result => change(index, result)" :n="n"
+                  @delete="deleteVar(index)" :showDelete="variables.length > 1" :individuals="individuals"
+                  :classes="classes" :relationships="relationships"/>
         <div class="side-buttons">
           <input type="submit" class="button primary" value="Execute">
-          <input type="button" class="button primary-outline" value="Advanced queries" @click="showAdvanced = !showAdvanced">
+          <input type="button" class="button white" value="Add a variable"
+                 @click="variables.push({})">
+          <input type="button" class="button white" value="Advanced queries"
+                 @click="showAdvanced = !showAdvanced">
         </div>
       </form>
       <form class="query-input-container" @submit.prevent="execute()" v-if="showAdvanced">
         <input type="text" class="query-input"
                placeholder="Input your SQWRL query [e.g. #Car(?x) ^ #color(?x, #Blue) -> sqwrl:select(?x)]"
-               v-model="query"/>
+               v-model="queries[0]"/>
         <input type="submit" value="Execute" class="primary"/>
       </form>
     </div>
     <div id="query-results">
-<!--      <h2>Query Results:</h2>-->
-      <div id="individuals-cards">
-        <div v-for="individual in resultIndividuals" :key="individual">
-          <router-link :to="`/individuals#${individual}`" class="card">
-            <header>
-              <div class="individual-name-delete">
-                <h2>{{ individual }}</h2>
-              </div>
-            </header>
-          </router-link>
+      <div v-for="(result, index) in results" :key="index">
+        <h2 class="capitalize-first-letter" style="padding-bottom: 12px">{{`${typePlural(result.type)} (${result.variableName})`}}</h2>
+        <div id="individuals-cards">
+          <div v-for="name in result.results" :key="name">
+            <router-link :to="`/${typePlural(result.type)}#${name}`" class="card">
+              <header>
+                <div class="individual-name">
+                  <h2>{{ name }}</h2>
+                </div>
+              </header>
+            </router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -62,18 +41,20 @@
 </template>
 
 <script>
-import {inject, onActivated, ref, watch} from "vue";
+import {computed, inject, onActivated, reactive, ref, watch} from "vue";
 import {useStore} from "vuex";
 import {useRoute} from "vue-router";
+import Variable from "@/components/Variable";
 
 export default {
   name: "Queries",
+  components: {Variable},
   setup() {
     const axios = inject('axios');
     const store = useStore()
-    const query = ref("#Bebida(?x) -> sqwrl:select(?x)")
+    const queries = reactive(["#Bebida(?x) -> sqwrl:select(?x)"])
     const individuals = ref([])
-    const resultIndividuals = ref([])
+    const results = ref([])
     const showAdvanced = ref(false)
     const className = ref("")
     const relationship = ref("")
@@ -81,43 +62,114 @@ export default {
     const classes = ref([])
     const relationships = ref([])
     const route = useRoute()
+    const variables = reactive([
+      {
+        output: true,
+      }
+    ])
 
     const execute = async () => {
-      resultIndividuals.value = []
+      results.value = []
       await store.dispatch('setLoading', {loadingText: "Executing query…", loadingId: 1801, isLoading: true});
       try {
         const url = store.getters.branch ? `${process.env.VUE_APP_BACKEND}/query?branch=${store.getters.branch}` : `${process.env.VUE_APP_BACKEND}/query?branch=main`
-        const response = await axios.post(url, query.value, {
+        const response = await axios.post(url, queries, {
           headers: {
-            "Content-Type": "text/plain"
+            "Content-Type": "application/json"
           }
         })
         console.log(response)
-        resultIndividuals.value = response.data.data
+        results.value = response.data.data.map((it, index) => {
+          it.type = variables.filter(it => it.output)[index].type
+          return it
+        })
       } catch (e) {
         console.log(e.response)
       }
       await store.dispatch('setLoading', {loadingId: 1801, isLoading: false});
     }
 
+    // quick function to prepend variable with either # or ?, depending on if a variable with that name is defined
+    const $ = variableName => variables.find(it => it.name === variableName) ? `?${variableName}` : `#${variableName}`
+
     const computeAndExecute = async () => {
-      let resultQuery = ""
-      if(className.value.length > 0) {
-        resultQuery += `#${className.value}(?x)`
-        if (relationship.value.length > 0 && individual.value.length > 0) {
-          resultQuery += ` ^ #${relationship.value}(?x, #${individual.value})`
+      let operations = []
+      for (const variable of variables) {
+        if (variable.type === 'individual') {
+          for (const filter of variable.filters) {
+            if (filter.type === 'individual_has_class') {
+              operations.push(`abox:caa(${$(filter.class)}, ?${variable.name})`)
+            } else if (filter.type === 'individual_has_relationship') {
+              operations.push(`abox:opaa(${filter.side === 'left' ? `?${variable.name}` : `${$(filter.individual2)}`}, ${$(filter.relationship)}, ${filter.side === 'right' ? `?${variable.name}` : `${$(filter.individual2)}`})`)
+            }
+          }
+        } else if (variable.type === 'class') {
+          for (const filter of variable.filters) {
+            if (filter.type === 'class_has_superclass') {
+              operations.push(`tbox:sca(?${variable.name}, ${$(filter.superclass)})`)
+            }
+            if (filter.type === 'class_has_subclass') {
+              operations.push(`tbox:sca(${$(filter.subclass)}, ?${variable.name})`)
+            } else if (filter.type === 'class_has_individual') {
+              operations.push(`abox:caa(?${variable.name}, ${$(filter.individual)})`)
+            }
+          }
+        } else if (variable.type === 'relationship') {
+          for (const filter of variable.filters) {
+            if (filter.type === 'relationship_has_left') {
+              operations.push(`tbox:opda(?${variable.name}, ${$(filter.class)})`)
+            }
+            if (filter.type === 'relationship_has_right') {
+              operations.push(`tbox:opra(?${variable.name}, ${$(filter.class)})`)
+            }
+          }
         }
-        resultQuery += " -> sqwrl:select(?x)"
       }
-      query.value = resultQuery
+      queries.splice(0, queries.length)
+      for (const variable of variables.filter(it => it.output)) {
+        queries.push(operations.join(" ^ ") + ` -> sqwrl:select(?${variable.name})`)
+      }
+      console.log("Queries", queries)
       await execute()
     }
+
+    const change = (index, result) => {
+      variables.splice(index, 1, result)
+      console.log("Changed variable", result)
+      console.log("index", index)
+      console.log("variables", variables)
+    }
+
+    const reset = (index, variable) => {
+      variables.splice(index, 1, variable)
+      console.log("Reset variable", variable)
+      console.log("index", index)
+      console.log("variables", variables)
+    }
+
+    const deleteVar = (index) => {
+      variables.splice(index, 1)
+      console.log("Deleted variable index", index)
+      console.log("variables", variables)
+    }
+
+    const n = computed(() => ({
+      individual: variables.filter(it => it.type === "individual")?.length,
+      class: variables.filter(it => it.type === "class").length,
+      relationship: variables.filter(it => it.type === "relationship")?.length,
+    }))
+
+    const typePlural = type => ({
+      individual: "individuals",
+      class: "classes",
+      relationship: "relationships",
+    }[type])
 
     const fetchIndividuals = async () => {
       individuals.value = []
       await store.dispatch('setLoading', {loadingText: "Loading queries…", loadingId: 701, isLoading: true});
       const response = store.getters.branch ? await axios.get(`${process.env.VUE_APP_BACKEND}/individuals?branch=${store.getters.branch}`) : await axios.get(`${process.env.VUE_APP_BACKEND}/individuals?branch=main`);
-      console.log(response);
+      console.log("Individuals", response);
       await store.dispatch('setCommit', response.data.latestCommit);
       individuals.value = response.data.data.sort((a, b) => a.className.localeCompare(b.className));
       await store.dispatch('setLoading', {loadingId: 701, isLoading: false});
@@ -179,17 +231,23 @@ export default {
     })
 
     return {
-      query,
+      queries,
       execute,
       computeAndExecute,
       individuals,
-      resultIndividuals,
+      results,
       showAdvanced,
+      typePlural,
       className,
       relationship,
       individual,
       relationships,
       classes,
+      variables,
+      change,
+      reset,
+      deleteVar,
+      n,
     }
   }
 }
@@ -216,35 +274,6 @@ export default {
   font-size: 20px;
 }
 
-.simple-filter {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background-color: white;
-  padding: 16px;
-  /*box-shadow: rgba(0, 0, 0, 0.04) 0 3px 5px;*/
-  border-radius: 3px;
-  border: 1px solid #d3d3d3;
-  transition: box-shadow 0.4s;
-}
-
-.simple-filter-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px 0;
-}
-
-input[name=className] {
-  display: block;
-  width: 404px;
-}
-
-.side-fields {
-  display: flex;
-  gap: 4px;
-}
-
 .side-buttons {
   display: flex;
   gap: 4px;
@@ -252,17 +281,6 @@ input[name=className] {
 
 .side-buttons > input {
   width: 200px;
-}
-
-.side-buttons > input[type=button] {
-  border: solid 1px #4b4b4b;
-  color: #4b4b4b;
-}
-
-.side-buttons > input[type=button]:hover {
-  border: solid 1px #4b4b4b;
-  background-color: #e8e8e8;
-  color: #4b4b4b;
 }
 
 .query-input-container {
@@ -334,31 +352,17 @@ input[name=className] {
   justify-content: center;
 }
 
-.individual-name-delete {
+.individual-name {
   display: flex;
   justify-content: center;
 }
 
-.class-name {
-  font-size: 12px;
-  color: #494949;
-  text-transform: uppercase;
-  text-align: center;
-}
-
-.delete {
-  color: #c93b3b;
-  background-color: #f1f1f1;
-  border-radius: 16px;
-  padding: 0 8px;
-  margin-left: 8px;
-}
-
-.delete:hover {
-  cursor: pointer;
-  color: #f1f1f1;
-  background-color: #c93b3b;
-}
+/*.class-name {*/
+/*  font-size: 12px;*/
+/*  color: #494949;*/
+/*  text-transform: uppercase;*/
+/*  text-align: center;*/
+/*}*/
 
 .title {
   padding-top: 8px;

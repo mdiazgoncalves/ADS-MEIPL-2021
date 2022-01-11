@@ -294,20 +294,6 @@ export default {
   text-align: center;
 }
 
-.delete {
-  color: #c93b3b;
-  background-color: #f1f1f1;
-  border-radius: 16px;
-  padding: 0 8px;
-  margin-left: 8px;
-}
-
-.delete:hover {
-  cursor: pointer;
-  color: #f1f1f1;
-  background-color: #c93b3b;
-}
-
 .title {
   padding-top: 8px;
   padding-bottom: 8px;
