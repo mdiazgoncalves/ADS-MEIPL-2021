@@ -18,5 +18,15 @@ services:
       - '8081:8080'
     networks:
       - backend
+  webvowl:
+    image: mcdgs/ads-g10-meipl-2021-webvowl:latest
+    container_name: webvowl
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - '8088:8080'
+    networks:
+      - backend
 networks:
   backend:
