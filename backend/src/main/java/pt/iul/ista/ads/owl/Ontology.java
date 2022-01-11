@@ -418,10 +418,12 @@ public class Ontology {
 	public List<QueryResponseModel.QueryResponse> query(List<String> queries) throws OntologyException {
 		try {
 			List<QueryResponseModel.QueryResponse> res = new ArrayList<QueryResponseModel.QueryResponse>();
-			SQWRLQueryEngine queryEngine = SWRLAPIFactory.createSQWRLQueryEngine(ontology);
+			int i = 1;
 			for(String query : queries) {
+				SQWRLQueryEngine queryEngine = SWRLAPIFactory.createSQWRLQueryEngine(ontology);
 				String variableName = extractVariableNameFromQuery(query);
-				SQWRLResult queryResult = queryEngine.runSQWRLQuery("q1", query);
+				SQWRLResult queryResult = queryEngine.runSQWRLQuery("q" + i, query);
+				++i;
 				List<String> results = new ArrayList<String>();
 				for(SQWRLResultValue value : queryResult.getColumn(0)) {
 					String qualifiedName = value.toString();
